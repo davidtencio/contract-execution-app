@@ -27,6 +27,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
 
         // Step 2: Year 1 Config
         fechaInicio: '',
+        durationYears: '1', // Default 1 year
         presupuestoInicial: '',
         topeAnual: ''
     });
@@ -170,7 +171,8 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                     const year1Payload = {
                         fechaInicio: formData.fechaInicio,
                         presupuestoInicial: parseFloat(formData.presupuestoInicial.toString().replace(/,/g, '')),
-                        topeAnual: formData.topeAnual ? parseFloat(formData.topeAnual.toString().replace(/,/g, '')) : parseFloat(formData.presupuestoInicial.toString().replace(/,/g, ''))
+                        topeAnual: formData.topeAnual ? parseFloat(formData.topeAnual.toString().replace(/,/g, '')) : parseFloat(formData.presupuestoInicial.toString().replace(/,/g, '')),
+                        durationYears: parseInt(formData.durationYears)
                     };
                     ContractService.createContract(contractPayload, year1Payload);
                 }
@@ -346,6 +348,19 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                                     onChange={handleChange}
                                     className={errors.fechaInicio ? 'border-red-500' : ''}
                                 />
+                            </div>
+
+                            <div className="input-group">
+                                <label>Duración del Periodo</label>
+                                <select
+                                    name="durationYears"
+                                    value={formData.durationYears}
+                                    onChange={handleChange}
+                                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                >
+                                    <option value="1">1 Año</option>
+                                    <option value="2">2 Años</option>
+                                </select>
                             </div>
 
                             <div className="input-group">

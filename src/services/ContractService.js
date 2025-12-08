@@ -113,13 +113,22 @@ export const ContractService = {
             if (itemsError) throw itemsError;
         }
 
-        // 3. Create Year 1 Period if data provided
+        // 3. Create Initial Period if data provided
         if (initialPeriodData) {
+            const durationYears = initialPeriodData.durationYears || 1;
+            const startDate = new Date(initialPeriodData.fechaInicio);
+            const endDate = new Date(startDate);
+            endDate.setFullYear(startDate.getFullYear() + durationYears);
+
+            // Adjust for end of day or -1 day if preferred, but usually straight year add is fine for legal logic often (minus 1 day)
+            // But simplification: start Jan 1 2024 -> End Jan 1 2025. 
+            // Better to do minus 1 day normally but sticking to simple FullYear add for now as placeholder
+
             const periodPayload = {
                 contract_id: contract.id,
-                nombre: 'Año 1',
+                nombre: 'Periodo 1', // Generic starting name
                 fecha_inicio: initialPeriodData.fechaInicio,
-                fecha_fin: new Date(new Date(initialPeriodData.fechaInicio).setFullYear(new Date(initialPeriodData.fechaInicio).getFullYear() + 1)).toISOString(),
+                fecha_fin: endDate.toISOString(),
                 presupuesto_asignado: parseFloat(initialPeriodData.presupuestoInicial),
                 presupuesto_inicial: parseFloat(initialPeriodData.presupuestoInicial),
                 estado: 'Activo',
@@ -202,12 +211,12 @@ export const ContractService = {
     createPeriod: async (periodData) => {
         const dbPayload = {
             contract_id: periodData.contractId,
-            nombre: periodData.numeroAno,
+            nombre: periodData.nombre || periodData.numeroAno, // Flexible name
             fecha_inicio: periodData.fechaInicio,
             fecha_fin: periodData.fechaFin,
             presupuesto_asignado: parseFloat(periodData.presupuestoAsignado),
             presupuesto_inicial: parseFloat(periodData.presupuestoAsignado),
-            estado: periodData.estado || 'Pendiente'
+            estado: periodData.estado || 'Pendiente' // Default to Pendiente, usually explicit
         };
         const { data, error } = await supabase.from('periods').insert([dbPayload]).select();
         if (error) throw error;
@@ -414,9 +423,5 @@ export const ContractService = {
         };
         const { error } = await supabase.from('injections').update(dbPayload).eq('id', id);
         if (error) throw error;
-    },
-
-    seedDatabase: async () => {
-        // No-op for Supabase
     }
 };

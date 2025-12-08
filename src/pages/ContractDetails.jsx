@@ -28,6 +28,13 @@ export function ContractDetails({ contractId, onBack }) {
     const [showInjectionModal, setShowInjectionModal] = useState(false);
     const [injections, setInjections] = useState([]);
 
+    // Period Modal State
+    const [showPeriodModal, setShowPeriodModal] = useState(false);
+    const [newPeriodData, setNewPeriodData] = useState({
+        presupuesto: '',
+        durationYears: '1'
+    });
+
     const [orders, setOrders] = useState([]);
 
     const [loading, setLoading] = useState(true);
@@ -95,6 +102,55 @@ export function ContractDetails({ contractId, onBack }) {
         } catch (error) {
             console.error(error);
             alert('Error al inyectar presupuesto');
+        }
+    };
+
+    const handleAddPeriod = async () => {
+        if (!newPeriodData.presupuesto) return alert("Ingrese el presupuesto");
+
+        try {
+            // Calculate dates based on last period or contract start
+            let startDate = new Date(contract.fechaInicio); // Default
+            if (periods.length > 0) {
+                // Start next day after last period ends
+                // Sort to find actual last one
+                const lastPeriod = [...periods].sort((a, b) => new Date(b.fechaFin) - new Date(a.fechaFin))[0];
+                startDate = new Date(lastPeriod.fechaFin);
+                startDate.setDate(startDate.getDate() + 1); // Next day
+            }
+
+            const endDate = new Date(startDate);
+            endDate.setFullYear(startDate.getFullYear() + parseInt(newPeriodData.durationYears));
+
+            const periodName = `Periodo ${periods.length + 1}`; // Simple increment naming
+
+            const newPeriod = await ContractService.createPeriod({
+                contractId: contract.id,
+                nombre: periodName,
+                fechaInicio: startDate.toISOString(),
+                fechaFin: endDate.toISOString(),
+                presupuestoAsignado: parseFloat(newPeriodData.presupuesto.replace(/,/g, '')),
+                estado: 'Pendiente'
+            });
+
+            setPeriods(prev => [...prev, {
+                id: newPeriod.id,
+                contractId: newPeriod.contract_id,
+                numeroAno: newPeriod.nombre,
+                fechaInicio: newPeriod.fecha_inicio,
+                fechaFin: newPeriod.fecha_fin,
+                presupuestoAsignado: newPeriod.presupuesto_asignado,
+                presupuestoInicial: newPeriod.presupuesto_inicial,
+                estado: newPeriod.estado,
+                moneda: newPeriod.moneda
+            }]);
+
+            setShowPeriodModal(false);
+            setNewPeriodData({ presupuesto: '', durationYears: '1' });
+            alert("Periodo agregado exitosamente");
+        } catch (e) {
+            console.error(e);
+            alert("Error al crear periodo");
         }
     };
 
@@ -273,7 +329,15 @@ export function ContractDetails({ contractId, onBack }) {
 
                 {/* Left: Periods List */}
                 <div className="lg:col-span-1 space-y-4">
-                    <h3 className="font-semibold text-lg">Periodos Contractuales</h3>
+                    <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-lg">Periodos</h3>
+                        <button
+                            onClick={() => setShowPeriodModal(true)}
+                            className="btn btn-xs btn-outline border-primary/20 text-primary hover:bg-primary/10 gap-1"
+                        >
+                            <Plus className="w-3 h-3" /> Nuevo
+                        </button>
+                    </div>
                     <div className="space-y-2">
                         {periods.map(period => (
                             <div
@@ -547,6 +611,46 @@ export function ContractDetails({ contractId, onBack }) {
                     onClose={() => setShowInjectionModal(false)}
                     onSubmit={handleInjectionSubmit}
                 />
+            )}
+
+
+            {showPeriodModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden animate-in zoom-in-95">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold mb-4">Agregar Nuevo Periodo</h3>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Duración</label>
+                                    <select
+                                        className="w-full bg-background border border-input rounded-md h-10 px-3"
+                                        value={newPeriodData.durationYears}
+                                        onChange={e => setNewPeriodData({ ...newPeriodData, durationYears: e.target.value })}
+                                    >
+                                        <option value="1">1 Año</option>
+                                        <option value="2">2 Años</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium">Presupuesto Inicial ({contract.moneda === 'CRC' ? '₡' : '$'})</label>
+                                    <input
+                                        className="w-full bg-background border border-input rounded-md h-10 px-3"
+                                        value={newPeriodData.presupuesto}
+                                        onChange={e => {
+                                            const val = e.target.value.replace(/,/g, '');
+                                            if (!isNaN(val)) setNewPeriodData({ ...newPeriodData, presupuesto: val });
+                                        }}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button className="btn btn-ghost" onClick={() => setShowPeriodModal(false)}>Cancelar</button>
+                                <button className="btn btn-primary" onClick={handleAddPeriod}>Crear Periodo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
