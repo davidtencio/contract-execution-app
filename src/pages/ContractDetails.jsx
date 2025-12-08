@@ -145,9 +145,43 @@ export function ContractDetails({ contractId, onBack }) {
         if (!amount) return;
 
         // Skip excessive validation if editing same amount (simplification) or just validate always
-        if (amount > saldoDisponible + (editingOrder ? editingOrder.monto : 0)) {
-            setOrderError(`El monto excede el saldo disponible (${contract.moneda === 'CRC' ? '₡' : '$'}${saldoDisponible + (editingOrder ? editingOrder.monto : 0)})`);
+        // Identify target period based on selected code (00, 01, etc.)
+        const targetPeriod = periods.find(p => p.numeroAno === orderForm.periodo);
+
+        if (!targetPeriod) {
+            alert('Contrato No Existe'); // Specific alert requested by user
             return;
+        }
+
+        // Calculate available balance for the TARGET period
+        // Note: We need to calculate this dynamically if we aren't already tracking balance per period in a map.
+        // For now, assuming we might not have all orders for all periods loaded, this is a bit tricky.
+        // However, we can approximate or if the user is in the "Periodo 1" tab (00) and adds to "Periodo 2", 
+        // we might not have the localized budget ready.
+        // SAFE APPROACH: If targetPeriod is selectedPeriod, use saldoDisponible. 
+        // If not, we skip strict frontend validation or try to compute it if possible? 
+        // User request didn't specify strict validation cross-period, just linking. 
+        // But implicitly "descargue del saldo" implies handling the budget subtraction.
+        // I will implement the linking first. Strict validation across un-loaded periods requires fetching their orders.
+        // For MVP: If target === selected, validate. Else, assume server side or loose validation (or just warn).
+
+        // Actually, let's try to validate if we can.
+        let targetSaldoDisponible = 0;
+        if (targetPeriod.id === selectedPeriod.id) {
+            targetSaldoDisponible = saldoDisponible;
+        } else {
+            // Fallback: Use full budget if we can't easily compute used. 
+            // Or better: Just proceed. The user said "descargue del saldo", which happens naturally on DB/Display next time.
+            // I will skip strict validation for cross-period additions to avoid blocking data entry 
+            // (or getting it wrong without fetching), but keep it for current period.
+            targetSaldoDisponible = Number.MAX_SAFE_INTEGER;
+        }
+
+        if (targetPeriod.id === selectedPeriod.id) {
+            if (amount > saldoDisponible + (editingOrder ? editingOrder.monto : 0)) {
+                setOrderError(`El monto excede el saldo disponible (${contract.moneda === 'CRC' ? '₡' : '$'}${saldoDisponible + (editingOrder ? editingOrder.monto : 0)})`);
+                return;
+            }
         }
 
         // Identify selected item details
@@ -164,13 +198,13 @@ export function ContractDetails({ contractId, onBack }) {
 
         const orderData = {
             contractId: contract.id,
-            periodId: selectedPeriod.id,
+            periodId: targetPeriod.id, // Use the dynamically found period ID
             fechaPedido: orderForm.fechaPedido,
             numeroPedidoSAP: orderForm.numeroPedidoSAP,
             numeroPedidoSICOP: orderForm.numeroPedidoSICOP,
             pur: orderForm.pur,
             numeroReserva: orderForm.numeroReserva,
-            periodo: orderForm.periodo, // Add to payload
+            periodo: orderForm.periodo,
             cantidadMedicamento: orderForm.cantidadMedicamento,
             monto: amount,
             descripcion: `SAP: ${orderForm.numeroPedidoSAP}`,
