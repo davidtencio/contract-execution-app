@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
-import { Search, Download, FileText, MoreHorizontal } from 'lucide-react';
+import { Search, Download, FileText } from 'lucide-react';
 import { EditOrderModal } from '../components/EditOrderModal';
+import editDotsIcon from '../assets/edit-dots.svg';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
@@ -204,7 +205,7 @@ export function OrderHistory() {
                                                 className="text-muted-foreground hover:text-primary transition-colors"
                                                 title="Editar pedido"
                                             >
-                                                <MoreHorizontal className="w-4 h-4" />
+                                                <img src={editDotsIcon} alt="Editar" className="w-6 h-6" />
                                             </button>
                                         </td>
                                     </tr>
