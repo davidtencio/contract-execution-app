@@ -126,7 +126,7 @@ export const ContractService = {
 
             const periodPayload = {
                 contract_id: contract.id,
-                nombre: 'Periodo 1', // Generic starting name
+                nombre: initialPeriodData.nombre || 'Periodo 1', // Use provided name or default
                 fecha_inicio: initialPeriodData.fechaInicio,
                 fecha_fin: endDate.toISOString(),
                 presupuesto_asignado: parseFloat(initialPeriodData.presupuestoInicial),
