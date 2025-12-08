@@ -82,6 +82,7 @@ export const ContractService = {
             periods: periodData ? periodData.map(p => ({
                 id: p.id,
                 nombre: p.nombre,
+                numeroAno: p.nombre, // Mapped for frontend compatibility
                 fechaInicio: p.fecha_inicio,
                 presupuestoInicial: p.presupuesto_inicial,
                 topeAnual: p.presupuesto_asignado
