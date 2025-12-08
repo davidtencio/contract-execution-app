@@ -201,7 +201,7 @@ export function OrderHistory() {
                                                     e.stopPropagation();
                                                     handleEdit(order);
                                                 }}
-                                                className="p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                                className="text-muted-foreground hover:text-primary transition-colors"
                                                 title="Editar pedido"
                                             >
                                                 <MoreHorizontal className="w-4 h-4" />
