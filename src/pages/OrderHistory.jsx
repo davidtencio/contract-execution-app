@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
 import { Search, Download, FileText } from 'lucide-react';
 import { EditOrderModal } from '../components/EditOrderModal';
-import editDotsIcon from '../assets/edit-dots.svg';
+import editIcon from '../assets/blue-pencil.svg';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
@@ -202,10 +202,10 @@ export function OrderHistory() {
                                                     e.stopPropagation();
                                                     handleEdit(order);
                                                 }}
-                                                className="text-muted-foreground hover:text-primary transition-colors"
+                                                className="hover:opacity-80 transition-opacity"
                                                 title="Editar pedido"
                                             >
-                                                <img src={editDotsIcon} alt="Editar" className="w-6 h-6" />
+                                                <img src={editIcon} alt="Editar" className="w-8 h-8" />
                                             </button>
                                         </td>
                                     </tr>
