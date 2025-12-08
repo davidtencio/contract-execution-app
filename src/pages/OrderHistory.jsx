@@ -1,26 +1,39 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
-import { Search, Download, FileText } from 'lucide-react';
+import { Search, Download, FileText, Edit2 } from 'lucide-react';
+import { EditOrderModal } from '../components/EditOrderModal';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    const loadOrders = async () => {
+        try {
+            setLoading(true);
+            const data = await ContractService.getAllOrdersWithDetails();
+            setOrders(data);
+        } catch (error) {
+            console.error("Error loading orders:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const loadOrders = async () => {
-            try {
-                setLoading(true);
-                const data = await ContractService.getAllOrdersWithDetails();
-                setOrders(data);
-            } catch (error) {
-                console.error("Error loading orders:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         loadOrders();
     }, []);
+
+    const handleEdit = (order) => {
+        setSelectedOrder(order);
+        setIsEditModalOpen(true);
+    };
+
+    const handleSave = async () => {
+        await loadOrders(); // Refresh list
+    };
 
     const filteredOrders = orders.filter(order => {
         const term = searchTerm.toLowerCase();
@@ -43,7 +56,7 @@ export function OrderHistory() {
     }
 
     const exportToCSV = () => {
-        const headers = ["Fecha", "Código Contrato", "Nombre Contrato", "Medicamento", "Proveedor", "Referencia SAP", "Referencia SICOP", "PUR", "N° Reserva", "Monto", "Moneda"];
+        const headers = ["Fecha", "Concurso", "N° Contrato", "Periodo", "Código Contrato", "Nombre Contrato", "Medicamento", "Proveedor", "Referencia SAP", "Referencia SICOP", "PUR", "N° Reserva", "Monto", "Moneda"];
 
         let csvContent = headers.join(',') + '\n';
 
@@ -59,6 +72,9 @@ export function OrderHistory() {
 
             const row = [
                 (o.fechaPedido || o.fecha || '').split('T')[0],
+                o.contractTenderNumber || '-',
+                o.contractLegalNumber || '-',
+                o.periodName || '-',
                 o.contractCode,
                 o.contractName,
                 o.medicamentoNombre || '-', // Ensure medication check
@@ -86,103 +102,138 @@ export function OrderHistory() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                    Historial Global de Pedidos
-                </h2>
-                <div className="flex gap-4">
-                    <button
-                        onClick={exportToCSV}
-                        className="btn btn-ghost border border-border hover:bg-muted"
-                    >
-                        <Download className="w-4 h-4" />
-                        Exportar CSV
-                    </button>
-                </div>
-            </div>
-
-            <div className="card">
-                <div className="flex items-center gap-4 mb-6 bg-muted/30 p-2 rounded-lg border border-border/50">
-                    <Search className="w-5 h-5 text-muted-foreground ml-2" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por contrato, medicamento, proveedor o número de pedido..."
-                        className="bg-transparent border-none focus:ring-0 text-lg w-full placeholder:text-muted-foreground/50 h-auto py-2"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+        <>
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                        Historial Global de Pedidos
+                    </h2>
+                    <div className="flex gap-4">
+                        <button
+                            onClick={exportToCSV}
+                            className="btn btn-ghost border border-border hover:bg-muted"
+                        >
+                            <Download className="w-4 h-4" />
+                            Exportar CSV
+                        </button>
+                    </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
-                            <tr>
-                                <th className="px-4 py-3 text-center">Fecha</th>
-                                <th className="px-4 py-3 text-center">Contrato</th>
-                                <th className="px-4 py-3 text-center">Medicamento</th>
-                                <th className="px-4 py-3 text-center">Proveedor</th>
-                                <th className="px-4 py-3 text-center">Ref. SAP / SICOP</th>
-                                <th className="px-4 py-3 text-center">Monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredOrders.map(order => (
-                                <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                                    <td className="px-4 py-3 font-mono text-muted-foreground text-center">
-                                        {(order.fechaPedido || order.fecha || '').split('T')[0].split('-').reverse().join('/')}
-                                    </td>
-                                    <td className="px-4 py-3 font-medium text-primary text-center">
-                                        {order.contractCode}
-                                    </td>
-                                    <td className="px-4 py-3 text-foreground/80 text-center">
-                                        {order.contractName}
-                                    </td>
-                                    <td className="px-4 py-3 text-muted-foreground text-center">
-                                        {order.supplierName}
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <div className="flex flex-col gap-1 items-center">
-                                            {order.numeroPedidoSAP && (
-                                                <span className="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">
-                                                    SAP: {order.numeroPedidoSAP}
-                                                </span>
-                                            )}
-                                            {order.numeroPedidoSICOP && (
-                                                <span className="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded">
-                                                    SICOP: {order.numeroPedidoSICOP}
-                                                </span>
-                                            )}
-                                            {!order.numeroPedidoSAP && !order.numeroPedidoSICOP && (
-                                                <span className="text-xs text-muted-foreground">-</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3 text-center font-mono">
-                                        <span className="text-muted-foreground mr-1">
-                                            {order.contractCurrency === 'USD' ? '$' : '₡'}
-                                        </span>
-                                        {parseFloat(order.monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </td>
-                                </tr>
-                            ))}
-                            {filteredOrders.length === 0 && (
+                <div className="card">
+                    <div className="flex items-center gap-4 mb-6 bg-muted/30 p-2 rounded-lg border border-border/50">
+                        <Search className="w-5 h-5 text-muted-foreground ml-2" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por contrato, medicamento, proveedor o número de pedido..."
+                            className="bg-transparent border-none focus:ring-0 text-lg w-full placeholder:text-muted-foreground/50 h-auto py-2"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                                 <tr>
-                                    <td colSpan="6" className="text-center py-12 text-muted-foreground">
-                                        <div className="flex flex-col items-center gap-3">
-                                            <FileText className="w-12 h-12 opacity-20" />
-                                            <p>No se encontraron pedidos.</p>
-                                        </div>
-                                    </td>
+                                    <th className="px-4 py-3 text-center">Fecha</th>
+                                    <th className="px-4 py-3 text-center">Concurso</th>
+                                    <th className="px-4 py-3 text-center">N° Contrato</th>
+                                    <th className="px-4 py-3 text-center">Periodo</th>
+                                    <th className="px-4 py-3 text-center">Cód. Interno</th>
+                                    <th className="px-4 py-3 text-center">Medicamento</th>
+                                    <th className="px-4 py-3 text-center">Proveedor</th>
+                                    <th className="px-4 py-3 text-center">Ref. SAP / SICOP</th>
+                                    <th className="px-4 py-3 text-center">Monto</th>
+                                    <th className="px-4 py-3 text-center">Acciones</th>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-                <div className="mt-4 text-xs text-muted-foreground text-center">
-                    Mostrando {filteredOrders.length} transacciones
+                            </thead>
+                            <tbody>
+                                {filteredOrders.map(order => (
+                                    <tr key={order.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                                        <td className="px-4 py-3 font-mono text-muted-foreground text-center">
+                                            {(order.fechaPedido || order.fecha || '').split('T')[0].split('-').reverse().join('/')}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-muted-foreground">
+                                            {order.contractTenderNumber}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-muted-foreground">
+                                            {order.contractLegalNumber}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-muted-foreground">
+                                            {order.periodName}
+                                        </td>
+                                        <td className="px-4 py-3 font-medium text-primary text-center">
+                                            {order.contractCode}
+                                        </td>
+                                        <td className="px-4 py-3 text-foreground/80 text-center">
+                                            {order.contractName}
+                                        </td>
+                                        <td className="px-4 py-3 text-muted-foreground text-center">
+                                            {order.supplierName}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="flex flex-col gap-1 items-center">
+                                                {order.numeroPedidoSAP && (
+                                                    <span className="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">
+                                                        SAP: {order.numeroPedidoSAP}
+                                                    </span>
+                                                )}
+                                                {order.numeroPedidoSICOP && (
+                                                    <span className="text-xs bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded">
+                                                        SICOP: {order.numeroPedidoSICOP}
+                                                    </span>
+                                                )}
+                                                {!order.numeroPedidoSAP && !order.numeroPedidoSICOP && (
+                                                    <span className="text-xs text-muted-foreground">-</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-center font-mono">
+                                            <span className="text-muted-foreground mr-1">
+                                                {order.contractCurrency === 'USD' ? '$' : '₡'}
+                                            </span>
+                                            {parseFloat(order.monto).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEdit(order);
+                                                }}
+                                                className="p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
+                                                title="Editar pedido"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {filteredOrders.length === 0 && (
+                                    <tr>
+                                        <td colSpan="10" className="text-center py-12 text-muted-foreground">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <FileText className="w-12 h-12 opacity-20" />
+                                                <p>No se encontraron pedidos.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="mt-4 text-xs text-muted-foreground text-center">
+                        Mostrando {filteredOrders.length} transacciones
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <EditOrderModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                order={selectedOrder}
+                onSave={handleSave}
+            />
+        </>
     );
 }

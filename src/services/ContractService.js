@@ -295,12 +295,15 @@ export const ContractService = {
                 *,
                 period:periods (
                     id,
+                    nombre,
                     contract:contracts (
                         id,
                         codigo,
                         nombre,
                         proveedor,
-                        moneda
+                        moneda,
+                        concurso,
+                        contrato_legal
                     )
                 )
             `)
@@ -323,7 +326,12 @@ export const ContractService = {
             contractName: o.period?.contract?.nombre || 'N/A',
             supplierName: o.period?.contract?.proveedor || 'N/A',
             contractCurrency: o.period?.contract?.moneda || 'USD',
-            medicamentoNombre: o.period?.contract?.nombre // Fallback if no specific item linkage
+            medicamentoNombre: o.period?.contract?.nombre, // Fallback if no specific item linkage
+
+            // New fields
+            contractTenderNumber: o.period?.contract?.concurso || 'N/A',
+            contractLegalNumber: o.period?.contract?.contrato_legal || 'N/A',
+            periodName: o.period?.nombre || 'N/A'
         }));
     },
 
