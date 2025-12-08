@@ -28,6 +28,7 @@ export function OrderHistory() {
     }, []);
 
     const handleEdit = (order) => {
+        // alert("Debug: Botón editar presionado"); // Temporary debug
         console.log("Edit button clicked for:", order);
         setSelectedOrder(order);
         setIsEditModalOpen(true);
@@ -108,7 +109,7 @@ export function OrderHistory() {
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                        Historial Global de Pedidos
+                        Historial Global de Pedidos <span className="text-xs text-red-500">(v-debug)</span>
                     </h2>
                     <div className="flex gap-4">
                         <button
