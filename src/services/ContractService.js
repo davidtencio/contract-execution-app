@@ -7,7 +7,8 @@ export const ContractService = {
             .from('contracts')
             .select(`
                 *,
-                items:contract_items(*)
+                items:contract_items(*),
+                periods:periods(nombre)
             `)
             .order('created_at', { ascending: false });
 
@@ -29,7 +30,8 @@ export const ContractService = {
                 nombre: i.nombre,
                 moneda: i.moneda,
                 precioUnitario: i.precio_unitario
-            })) : []
+            })) : [],
+            periodos: c.periods ? c.periods.map(p => p.nombre).sort() : [] // Map period names
         })) || [];
     },
 
