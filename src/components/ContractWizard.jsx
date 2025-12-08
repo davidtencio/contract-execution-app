@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
 import { ChevronRight, Check, AlertCircle, Save, Plus, Trash2 } from 'lucide-react';
 
@@ -32,22 +32,46 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
     });
 
     // Load data if editing
-    useState(() => {
-        if (contractToEdit) {
-            setFormData(prev => ({
-                ...prev,
-                proveedor: contractToEdit.proveedor,
-                concurso: contractToEdit.concurso,
-                contratoLegal: contractToEdit.contratoLegal,
-                items: contractToEdit.items || [{
-                    id: Date.now(),
-                    codigo: contractToEdit.codigo,
-                    nombre: contractToEdit.nombre,
-                    moneda: contractToEdit.moneda || 'USD',
-                    precioUnitario: contractToEdit.precioUnitario
-                }]
-            }));
-        }
+
+
+    useEffect(() => {
+        const loadContractDetails = async () => {
+            if (contractToEdit) {
+                setLoading(true); // Reusing loading state, or creating a new one? Reusing is fine but might block UI.
+                try {
+                    // Always fetch fresh data to get items
+                    const fullContract = await ContractService.getContractById(contractToEdit.id);
+
+                    setFormData(prev => ({
+                        ...prev,
+                        proveedor: fullContract.proveedor,
+                        concurso: fullContract.concurso || '',
+                        contratoLegal: fullContract.contratoLegal || '',
+                        items: fullContract.items && fullContract.items.length > 0 ? fullContract.items.map(i => ({
+                            id: i.id || Date.now() + Math.random(),
+                            codigo: i.codigo,
+                            nombre: i.nombre,
+                            moneda: i.moneda || 'USD',
+                            precioUnitario: i.precioUnitario
+                        })) : [{
+                            id: Date.now(),
+                            codigo: fullContract.codigo, // Fallback for legacy data
+                            nombre: fullContract.nombre,
+                            moneda: fullContract.moneda || 'USD',
+                            precioUnitario: fullContract.precioUnitario
+                        }]
+                    }));
+                } catch (error) {
+                    console.error("Error loading contract details:", error);
+                    alert("Error al cargar los detalles del contrato.");
+                    onClose();
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        loadContractDetails();
     }, [contractToEdit]);
 
     const handleItemChange = (id, field, value) => {

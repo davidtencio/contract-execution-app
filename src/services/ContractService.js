@@ -15,7 +15,8 @@ export const ContractService = {
                 precio_unitario,
                 fecha_inicio,
                 moneda
-            `);
+            `)
+            .order('created_at', { ascending: false });
 
         if (error) throw error;
 
@@ -33,50 +34,58 @@ export const ContractService = {
     },
 
     getContractById: async (id) => {
-        const { data, error } = await supabase
+        // Fetch Contract
+        const { data: contract, error: contractError } = await supabase
             .from('contracts')
             .select('*')
             .eq('id', id)
             .single();
 
-        if (error) throw error;
+        if (contractError) throw contractError;
 
-        // Mock items for consistency until items table is fully integrated
-        // (If we had Items table, we would fetch here)
+        // Fetch Items
+        const { data: items, error: itemsError } = await supabase
+            .from('contract_items')
+            .select('*')
+            .eq('contract_id', id);
+
+        if (itemsError) throw itemsError;
+
         return {
-            id: data.id,
-            codigo: data.codigo,
-            nombre: data.nombre,
-            concurso: data.concurso,
-            contratoLegal: data.contrato_legal,
-            proveedor: data.proveedor,
-            precioUnitario: data.precio_unitario,
-            fechaInicio: data.fecha_inicio,
-            moneda: data.moneda,
-            items: [{
-                id: data.id + '_item',
-                codigo: data.codigo,
-                nombre: data.nombre,
-                precioUnitario: data.precio_unitario,
-                moneda: data.moneda
-            }]
+            id: contract.id,
+            codigo: contract.codigo,
+            nombre: contract.nombre,
+            concurso: contract.concurso,
+            contratoLegal: contract.contrato_legal,
+            proveedor: contract.proveedor,
+            precioUnitario: contract.precio_unitario,
+            fechaInicio: contract.fecha_inicio,
+            moneda: contract.moneda,
+            items: items.map(i => ({
+                id: i.id,
+                codigo: i.codigo,
+                nombre: i.nombre,
+                moneda: i.moneda,
+                precioUnitario: i.precio_unitario
+            }))
         };
     },
 
     createContract: async (contractData, initialPeriodData) => {
-        // The Wizard sends { items: [...] } but DB expects flat fields.
-        // We take the first item as the primary contract info.
+        // 1. Insert Contract
+        // Takes the first item as the "primary" info for the contract header if needed, 
+        // but mostly we rely on the specific items list now.
         const primaryItem = contractData.items && contractData.items[0] ? contractData.items[0] : {};
 
         const dbPayload = {
-            codigo: primaryItem.codigo || contractData.codigo,
-            nombre: primaryItem.nombre || contractData.nombre,
+            codigo: primaryItem.codigo || contractData.codigo || 'N/A', // Fallback
+            nombre: primaryItem.nombre || contractData.nombre || 'Contrato General',
             concurso: contractData.concurso,
             contrato_legal: contractData.contratoLegal,
             proveedor: contractData.proveedor,
-            precio_unitario: parseFloat(primaryItem.precioUnitario || contractData.precioUnitario || 0),
-            fecha_inicio: initialPeriodData?.fechaInicio || contractData.fechaInicio, // Usually in period, but maybe useful here
-            moneda: primaryItem.moneda || contractData.moneda || 'USD'
+            precio_unitario: parseFloat(primaryItem.precioUnitario || 0), // Legacy field, keeping for now
+            fecha_inicio: initialPeriodData?.fechaInicio || contractData.fechaInicio,
+            moneda: primaryItem.moneda || 'USD' // Default currency
         };
 
         const { data: contract, error: contractError } = await supabase
@@ -87,7 +96,24 @@ export const ContractService = {
 
         if (contractError) throw contractError;
 
-        // Create Year 1 Period if data provided
+        // 2. Insert Items
+        if (contractData.items && contractData.items.length > 0) {
+            const itemsPayload = contractData.items.map(item => ({
+                contract_id: contract.id,
+                codigo: item.codigo,
+                nombre: item.nombre,
+                moneda: item.moneda,
+                precio_unitario: parseFloat(item.precioUnitario)
+            }));
+
+            const { error: itemsError } = await supabase
+                .from('contract_items')
+                .insert(itemsPayload);
+
+            if (itemsError) throw itemsError;
+        }
+
+        // 3. Create Year 1 Period if data provided
         if (initialPeriodData) {
             const periodPayload = {
                 contract_id: contract.id,
@@ -105,6 +131,50 @@ export const ContractService = {
         }
 
         return { ...contract, id: contract.id };
+    },
+
+    updateContract: async (id, contractData) => {
+        // 1. Update Contract Details
+        const { error: contractError } = await supabase
+            .from('contracts')
+            .update({
+                proveedor: contractData.proveedor,
+                concurso: contractData.concurso,
+                contrato_legal: contractData.contratoLegal
+            })
+            .eq('id', id);
+
+        if (contractError) throw contractError;
+
+        // 2. Handle Items (Sync Strategy: Delete all and recreate is simplest for now, 
+        // or smarter upsert. For this MVP, let's try upsert or delete/insert. 
+        // Given we don't have stable IDs from frontend for new items reliably without complications, 
+        // and volume is small (max 3 items), Delete + Insert is safest/easiest.
+
+        // A. Delete existing items
+        const { error: deleteError } = await supabase
+            .from('contract_items')
+            .delete()
+            .eq('contract_id', id);
+
+        if (deleteError) throw deleteError;
+
+        // B. Insert new items
+        if (contractData.items && contractData.items.length > 0) {
+            const itemsPayload = contractData.items.map(item => ({
+                contract_id: id,
+                codigo: item.codigo,
+                nombre: item.nombre,
+                moneda: item.moneda,
+                precio_unitario: parseFloat(item.precioUnitario)
+            }));
+
+            const { error: insertError } = await supabase
+                .from('contract_items')
+                .insert(itemsPayload);
+
+            if (insertError) throw insertError;
+        }
     },
 
     getPeriodsByContractId: async (contractId) => {
