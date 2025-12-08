@@ -53,6 +53,15 @@ export const ContractService = {
 
         if (itemsError) throw itemsError;
 
+        // Fetch Periods (to get initial config)
+        const { data: periodData, error: periodError } = await supabase
+            .from('periods')
+            .select('*')
+            .eq('contract_id', id)
+            .order('fecha_inicio', { ascending: true }); // Get earliest
+
+        if (periodError) throw periodError;
+
         return {
             id: contract.id,
             codigo: contract.codigo,
@@ -69,7 +78,14 @@ export const ContractService = {
                 nombre: i.nombre,
                 moneda: i.moneda,
                 precioUnitario: i.precio_unitario
-            }))
+            })),
+            periods: periodData ? periodData.map(p => ({
+                id: p.id,
+                nombre: p.nombre,
+                fechaInicio: p.fecha_inicio,
+                presupuestoInicial: p.presupuesto_inicial,
+                topeAnual: p.presupuesto_asignado
+            })) : []
         };
     },
 
@@ -185,6 +201,23 @@ export const ContractService = {
                 .insert(itemsPayload);
 
             if (insertError) throw insertError;
+        }
+
+        // 3. Update Period (Initial Configuration) if provided
+        if (contractData.initialPeriod && contractData.initialPeriod.id) {
+            const p = contractData.initialPeriod;
+            const periodUpdate = {
+                fecha_inicio: p.fechaInicio,
+                presupuesto_inicial: parseFloat(p.presupuestoInicial),
+                presupuesto_asignado: parseFloat(p.topeAnual || p.presupuestoInicial)
+            };
+
+            const { error: periodUpdateError } = await supabase
+                .from('periods')
+                .update(periodUpdate)
+                .eq('id', contractData.initialPeriod.id);
+
+            if (periodUpdateError) throw periodUpdateError;
         }
     },
 

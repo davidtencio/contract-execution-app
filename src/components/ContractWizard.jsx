@@ -12,6 +12,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
     // Form State
     const [formData, setFormData] = useState({
         // Step 1: General (Shared)
+        periodId: null, // Store period ID for updates
         proveedor: '',
         concurso: '',
         contratoLegal: '',
@@ -44,12 +45,23 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                     // Always fetch fresh data to get items
                     const fullContract = await ContractService.getContractById(contractToEdit.id);
 
+                    // Find relevant period (e.g., first one or specific one)
+                    const initialPeriod = fullContract.periods && fullContract.periods.length > 0 ? fullContract.periods[0] : null;
+
                     setFormData(prev => ({
                         ...prev,
                         proveedor: fullContract.proveedor,
                         concurso: fullContract.concurso || '',
                         contratoLegal: fullContract.contratoLegal || '',
-                        periodName: '', // Not loading period name for edit yet as it belongs to periods table, keep simple or fetch first period?
+                        periodName: initialPeriod ? initialPeriod.nombre : '',
+
+                        // Load Period Data
+                        periodId: initialPeriod ? initialPeriod.id : null,
+                        fechaInicio: initialPeriod ? initialPeriod.fechaInicio : '',
+                        presupuestoInicial: initialPeriod ? initialPeriod.presupuestoInicial : '',
+                        topeAnual: initialPeriod ? initialPeriod.topeAnual : '',
+                        durationYears: '1', // Default or derive if needed
+
                         items: fullContract.items && fullContract.items.length > 0 ? fullContract.items.map(i => ({
                             id: i.id || Date.now() + Math.random(),
                             codigo: i.codigo,
@@ -164,7 +176,14 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                         nombre: i.nombre,
                         moneda: i.moneda,
                         precioUnitario: parseFloat(i.precioUnitario.toString().replace(/,/g, ''))
-                    }))
+                    })),
+                    // Include Initial Period Data for Updates
+                    initialPeriod: isEditMode && formData.periodId ? {
+                        id: formData.periodId,
+                        fechaInicio: formData.fechaInicio,
+                        presupuestoInicial: formData.presupuestoInicial.toString().replace(/,/g, ''),
+                        topeAnual: formData.topeAnual ? formData.topeAnual.toString().replace(/,/g, '') : null
+                    } : null
                 };
 
                 if (isEditMode) {
@@ -436,17 +455,11 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                 )}
 
                 {step === 1 ? (
-                    isEditMode ? (
-                        <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
-                            {loading ? 'Guardando...' : 'Guardar Cambios'}
-                            {!loading && <Save className="w-4 h-4" />}
-                        </button>
-                    ) : (
-                        <button className="btn btn-primary" onClick={handleNext}>
-                            Siguiente
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    )
+                    // Logic: Even in edit mode, allow going to 'Next' (Step 2) to edit period details
+                    <button className="btn btn-primary" onClick={handleNext}>
+                        Siguiente
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
                 ) : (
                     <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
                         {loading ? 'Creando...' : 'Crear Contrato'}
