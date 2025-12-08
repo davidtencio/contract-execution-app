@@ -426,5 +426,14 @@ export const ContractService = {
         };
         const { error } = await supabase.from('injections').update(dbPayload).eq('id', id);
         if (error) throw error;
+    },
+
+    deleteContract: async (id) => {
+        const { error } = await supabase
+            .from('contracts')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
     }
 };
