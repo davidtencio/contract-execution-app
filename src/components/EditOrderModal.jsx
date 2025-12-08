@@ -32,34 +32,14 @@ export function EditOrderModal({ isOpen, onClose, order, onSave }) {
 
     if (!isOpen) return null;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-
-        try {
-            await ContractService.updateOrder(order.id, {
-                ...order, // Keep existing fields
-                ...formData,
-                monto: parseFloat(formData.monto),
-                cantidadMedicamento: parseInt(formData.cantidadMedicamento)
-            });
-            onSave();
-            onClose();
-        } catch (err) {
-            console.error("Error updating order:", err);
-            setError("Error al actualizar el pedido. Por favor intente nuevamente.");
-        } finally {
-            setLoading(false);
-        }
-    };
+    alert("Debug: EL MODAL SE ESTÁ RENDERIZANDO (Paso 2)");
 
     return createPortal(
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-            <div className="bg-card w-full max-w-lg rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99999] flex items-center justify-center p-4" style={{ zIndex: 99999 }}>
+            <div className="bg-card w-full max-w-lg rounded-xl shadow-2xl border-4 border-red-500 animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center p-6 border-b border-border/50">
                     <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                        Editar Pedido
+                        Editar Pedido (DEBUG MODE)
                     </h2>
                     <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
                         <X className="w-5 h-5" />
