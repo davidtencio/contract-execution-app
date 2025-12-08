@@ -329,12 +329,18 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                             </div>
                             <div className="input-group">
                                 <label>Periodo</label>
-                                <input
+                                <select
                                     name="periodName"
                                     value={formData.periodName}
                                     onChange={handleChange}
-                                    placeholder="Ej. 2024"
-                                />
+                                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                >
+                                    <option value="">Seleccionar...</option>
+                                    <option value="00">00</option>
+                                    <option value="01">01</option>
+                                    <option value="02">02</option>
+                                    <option value="03">03</option>
+                                </select>
                             </div>
                         </div>
                     </div>
