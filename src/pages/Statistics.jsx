@@ -6,7 +6,14 @@ import { BarChart3, TrendingUp, AlertTriangle, DollarSign, Package } from 'lucid
 export function Statistics() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
-    // ... stats state ...
+    const [stats, setStats] = useState({
+        globalExecutionUSD: { budget: 0, executed: 0 },
+        globalExecutionCRC: { budget: 0, executed: 0 },
+        topContracts: [],
+        expiringContracts: [],
+        topMedications: [],
+        monthlyTrend: []
+    });
 
     useEffect(() => {
         loadData();
