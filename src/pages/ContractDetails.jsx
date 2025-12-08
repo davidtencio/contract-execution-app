@@ -204,7 +204,7 @@ export function ContractDetails({ contractId, onBack }) {
             setEditingOrder(null);
         } catch (err) {
             console.error(err);
-            alert("Error al procesar el pedido. Revise la consola.");
+            alert(`Error al procesar el pedido: ${err.message || 'Revise la consola.'}`);
         }
     };
 

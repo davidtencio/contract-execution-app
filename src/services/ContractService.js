@@ -212,20 +212,22 @@ export const ContractService = {
     },
 
     createOrder: async (orderData) => {
+        const sanitize = (val) => (val === '' || val === undefined || val === null ? null : val);
+
         const dbPayload = {
             period_id: orderData.periodId,
             fecha_pedido: orderData.fechaPedido,
-            numero_pedido_sap: orderData.numeroPedidoSAP,
-            numero_pedido_sicop: orderData.numeroPedidoSICOP,
-            cantidad_medicamento: parseInt(orderData.cantidadMedicamento),
-            monto: parseFloat(orderData.monto),
-            pur: orderData.pur,
-            numero_reserva: orderData.numeroReserva,
-            descripcion: orderData.descripcion,
+            numero_pedido_sap: sanitize(orderData.numeroPedidoSAP),
+            numero_pedido_sicop: sanitize(orderData.numeroPedidoSICOP),
+            cantidad_medicamento: parseInt(orderData.cantidadMedicamento) || 0,
+            monto: parseFloat(orderData.monto) || 0,
+            pur: sanitize(orderData.pur),
+            numero_reserva: sanitize(orderData.numeroReserva),
+            descripcion: sanitize(orderData.descripcion),
             // Restore item linkage
-            item_id: orderData.medicamentoId,
-            medicamento_nombre: orderData.medicamentoNombre,
-            medicamento_codigo: orderData.medicamentoCodigo
+            item_id: orderData.medicamentoId ? sanitize(orderData.medicamentoId) : null,
+            medicamento_nombre: sanitize(orderData.medicamentoNombre),
+            medicamento_codigo: sanitize(orderData.medicamentoCodigo)
         };
         const { data, error } = await supabase.from('orders').insert([dbPayload]).select();
         if (error) throw error;
@@ -233,19 +235,21 @@ export const ContractService = {
     },
 
     updateOrder: async (id, orderData) => {
+        const sanitize = (val) => (val === '' || val === undefined || val === null ? null : val);
+
         const dbPayload = {
             fecha_pedido: orderData.fechaPedido,
-            numero_pedido_sap: orderData.numeroPedidoSAP,
-            numero_pedido_sicop: orderData.numeroPedidoSICOP,
-            cantidad_medicamento: parseInt(orderData.cantidadMedicamento),
-            monto: parseFloat(orderData.monto),
-            pur: orderData.pur,
-            numero_reserva: orderData.numeroReserva,
-            descripcion: orderData.descripcion,
+            numero_pedido_sap: sanitize(orderData.numeroPedidoSAP),
+            numero_pedido_sicop: sanitize(orderData.numeroPedidoSICOP),
+            cantidad_medicamento: parseInt(orderData.cantidadMedicamento) || 0,
+            monto: parseFloat(orderData.monto) || 0,
+            pur: sanitize(orderData.pur),
+            numero_reserva: sanitize(orderData.numeroReserva),
+            descripcion: sanitize(orderData.descripcion),
             // Restore item linkage
-            item_id: orderData.medicamentoId,
-            medicamento_nombre: orderData.medicamentoNombre,
-            medicamento_codigo: orderData.medicamentoCodigo
+            item_id: orderData.medicamentoId ? sanitize(orderData.medicamentoId) : null,
+            medicamento_nombre: sanitize(orderData.medicamentoNombre),
+            medicamento_codigo: sanitize(orderData.medicamentoCodigo)
         };
         const { data, error } = await supabase.from('orders').update(dbPayload).eq('id', id).select();
         if (error) throw error;
