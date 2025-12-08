@@ -355,10 +355,45 @@ export function ContractDetails({ contractId, onBack }) {
                                         Inyectar Presupuesto
                                     </button>
                                 </div>
-                                <div className="text-4xl font-bold text-foreground mb-1">
+                                <div className="text-4xl font-bold text-foreground mb-4">
                                     {contract.moneda === 'CRC' ? '₡' : '$'}{Number(saldoDisponible).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
-                                <div className="flex justify-between items-end">
+
+                                {/* Contract Details Grid */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-3 bg-background/50 rounded-lg border border-border/50 text-sm">
+                                    <div>
+                                        <p className="text-muted-foreground text-xs">Unidades Disponibles (Est.)</p>
+                                        <p className="font-semibold text-foreground">
+                                            {(() => {
+                                                const price = contract.items?.length > 0 ? contract.items[0].precioUnitario : contract.precioUnitario;
+                                                const units = price > 0 ? saldoDisponible / price : 0;
+                                                return Math.floor(units).toLocaleString('es-ES');
+                                            })()}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-xs">Precio Unitario</p>
+                                        <p className="font-semibold text-foreground">
+                                            {contract.moneda === 'CRC' ? '₡' : '$'}
+                                            {Number(contract.items?.length > 0 ? contract.items[0].precioUnitario : contract.precioUnitario)
+                                                .toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-xs">Proveedor</p>
+                                        <p className="font-semibold text-foreground truncate" title={contract.proveedor}>
+                                            {contract.proveedor}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-muted-foreground text-xs">N° Contrato</p>
+                                        <p className="font-semibold text-foreground truncate" title={contract.contratoLegal}>
+                                            {contract.contratoLegal || 'N/A'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-end mt-4">
                                     <div className="text-sm text-muted-foreground">
                                         Presupuesto Asignado: {contract.moneda === 'CRC' ? '₡' : '$'}{Number(selectedPeriod.presupuestoAsignado).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </div>
