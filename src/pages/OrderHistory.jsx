@@ -28,6 +28,7 @@ export function OrderHistory() {
     }, []);
 
     const handleEdit = (order) => {
+        console.log("Edit button clicked for:", order);
         setSelectedOrder(order);
         setIsEditModalOpen(true);
     };
@@ -199,6 +200,7 @@ export function OrderHistory() {
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
+                                                    console.log("Button onClick event fired");
                                                     e.stopPropagation();
                                                     handleEdit(order);
                                                 }}

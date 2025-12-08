@@ -27,32 +27,12 @@ export function EditOrderModal({ isOpen, onClose, order, onSave }) {
         }
     }, [order]);
 
+    console.log("Modal render, isOpen:", isOpen);
+
     if (!isOpen) return null;
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
-
-        try {
-            await ContractService.updateOrder(order.id, {
-                ...order, // Keep existing fields
-                ...formData,
-                monto: parseFloat(formData.monto),
-                cantidadMedicamento: parseInt(formData.cantidadMedicamento)
-            });
-            onSave();
-            onClose();
-        } catch (err) {
-            console.error("Error updating order:", err);
-            setError("Error al actualizar el pedido. Por favor intente nuevamente.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
             <div className="bg-card w-full max-w-lg rounded-xl shadow-2xl border border-border animate-in fade-in zoom-in-95 duration-200">
                 <div className="flex justify-between items-center p-6 border-b border-border/50">
                     <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
