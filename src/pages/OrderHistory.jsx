@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
-import { Search, Download, FileText, MoreVertical } from 'lucide-react';
+import { Search, Download, FileText, MoreHorizontal } from 'lucide-react';
 import { EditOrderModal } from '../components/EditOrderModal';
 
 export function OrderHistory() {
@@ -204,7 +204,7 @@ export function OrderHistory() {
                                                 className="p-1 hover:bg-muted rounded-full text-muted-foreground hover:text-primary transition-colors"
                                                 title="Editar pedido"
                                             >
-                                                <MoreVertical className="w-4 h-4" />
+                                                <MoreHorizontal className="w-4 h-4" />
                                             </button>
                                         </td>
                                     </tr>
