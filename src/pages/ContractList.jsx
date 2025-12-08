@@ -164,7 +164,7 @@ export function ContractList({ onNavigate, onEdit }) {
                             <tr>
                                 <th className="px-6 py-4 font-medium text-left">Ref. Legal</th>
                                 <th className="px-6 py-4 font-medium text-left">Contrato</th>
-                                <th className="px-6 py-4 font-medium text-left">Periodos</th>
+                                <th className="px-6 py-4 font-medium text-center">Periodos</th>
                                 <th className="px-6 py-4 font-medium text-center">Medicamento</th>
                                 <th className="px-6 py-4 font-medium text-center">Proveedor</th>
                                 <th className="px-6 py-4 font-medium text-center">Precio Unitario</th>
@@ -204,8 +204,8 @@ export function ContractList({ onNavigate, onEdit }) {
                                         </div>
                                     </td>
                                     {/* Periodos Column */}
-                                    <td className="px-6 py-4 align-top text-left text-xs font-medium text-foreground">
-                                        <div className="flex flex-wrap gap-1 max-w-[150px]">
+                                    <td className="px-6 py-4 align-top text-center text-xs font-medium text-foreground">
+                                        <div className="flex flex-wrap gap-1 max-w-[150px] justify-center mx-auto">
                                             {contract.periodos && contract.periodos.length > 0 ? (
                                                 contract.periodos.map((p, idx) => (
                                                     <span key={idx} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
