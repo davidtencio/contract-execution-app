@@ -222,8 +222,10 @@ export const ContractService = {
             pur: orderData.pur,
             numero_reserva: orderData.numeroReserva,
             descripcion: orderData.descripcion,
-            // If handling items:
-            // item_id: orderData.medicamentoId
+            // Restore item linkage
+            item_id: orderData.medicamentoId,
+            medicamento_nombre: orderData.medicamentoNombre,
+            medicamento_codigo: orderData.medicamentoCodigo
         };
         const { data, error } = await supabase.from('orders').insert([dbPayload]).select();
         if (error) throw error;
@@ -239,7 +241,11 @@ export const ContractService = {
             monto: parseFloat(orderData.monto),
             pur: orderData.pur,
             numero_reserva: orderData.numeroReserva,
-            descripcion: orderData.descripcion
+            descripcion: orderData.descripcion,
+            // Restore item linkage
+            item_id: orderData.medicamentoId,
+            medicamento_nombre: orderData.medicamentoNombre,
+            medicamento_codigo: orderData.medicamentoCodigo
         };
         const { data, error } = await supabase.from('orders').update(dbPayload).eq('id', id).select();
         if (error) throw error;
@@ -307,7 +313,7 @@ export const ContractService = {
             period_id: injectionData.periodId,
             amount: parseFloat(injectionData.amount),
             fecha: injectionData.date || new Date().toISOString(),
-            descripcion: injectionData.justification
+            descripcion: injectionData.oficioNumber || injectionData.justification || 'Inyección Presupuestaria'
         };
         const { data, error } = await supabase.from('injections').insert([dbPayload]).select();
         if (error) throw error;
@@ -318,7 +324,7 @@ export const ContractService = {
         const dbPayload = {
             amount: parseFloat(data.amount),
             fecha: data.date,
-            descripcion: data.justification
+            descripcion: data.oficioNumber || data.justification
         };
         const { error } = await supabase.from('injections').update(dbPayload).eq('id', id);
         if (error) throw error;
