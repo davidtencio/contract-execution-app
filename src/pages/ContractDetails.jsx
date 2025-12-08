@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
 import { useMemo } from 'react';
 import { ArrowLeft, Plus, AlertTriangle, DollarSign, Pencil, Trash2, TrendingUp } from 'lucide-react';
-import { createPortal } from 'react-dom';
 import { BudgetInjectionModal } from '../components/BudgetInjectionModal';
 
 export function ContractDetails({ contractId, onBack }) {
@@ -28,13 +27,6 @@ export function ContractDetails({ contractId, onBack }) {
     // Injections State
     const [showInjectionModal, setShowInjectionModal] = useState(false);
     const [injections, setInjections] = useState([]);
-
-    // Period Modal State
-    const [showPeriodModal, setShowPeriodModal] = useState(false);
-    const [newPeriodData, setNewPeriodData] = useState({
-        presupuesto: '',
-        durationYears: '1'
-    });
 
     const [orders, setOrders] = useState([]);
 
@@ -103,55 +95,6 @@ export function ContractDetails({ contractId, onBack }) {
         } catch (error) {
             console.error(error);
             alert('Error al inyectar presupuesto');
-        }
-    };
-
-    const handleAddPeriod = async () => {
-        if (!newPeriodData.presupuesto) return alert("Ingrese el presupuesto");
-
-        try {
-            // Calculate dates based on last period or contract start
-            let startDate = new Date(contract.fechaInicio); // Default
-            if (periods.length > 0) {
-                // Start next day after last period ends
-                // Sort to find actual last one
-                const lastPeriod = [...periods].sort((a, b) => new Date(b.fechaFin) - new Date(a.fechaFin))[0];
-                startDate = new Date(lastPeriod.fechaFin);
-                startDate.setDate(startDate.getDate() + 1); // Next day
-            }
-
-            const endDate = new Date(startDate);
-            endDate.setFullYear(startDate.getFullYear() + parseInt(newPeriodData.durationYears));
-
-            const periodName = `Periodo ${periods.length + 1}`; // Simple increment naming
-
-            const newPeriod = await ContractService.createPeriod({
-                contractId: contract.id,
-                nombre: periodName,
-                fechaInicio: startDate.toISOString(),
-                fechaFin: endDate.toISOString(),
-                presupuestoAsignado: parseFloat(newPeriodData.presupuesto.replace(/,/g, '')),
-                estado: 'Pendiente'
-            });
-
-            setPeriods(prev => [...prev, {
-                id: newPeriod.id,
-                contractId: newPeriod.contract_id,
-                numeroAno: newPeriod.nombre,
-                fechaInicio: newPeriod.fecha_inicio,
-                fechaFin: newPeriod.fecha_fin,
-                presupuestoAsignado: newPeriod.presupuesto_asignado,
-                presupuestoInicial: newPeriod.presupuesto_inicial,
-                estado: newPeriod.estado,
-                moneda: newPeriod.moneda
-            }]);
-
-            setShowPeriodModal(false);
-            setNewPeriodData({ presupuesto: '', durationYears: '1' });
-            alert("Periodo agregado exitosamente");
-        } catch (e) {
-            console.error(e);
-            alert("Error al crear periodo");
         }
     };
 
@@ -332,12 +275,6 @@ export function ContractDetails({ contractId, onBack }) {
                 <div className="lg:col-span-1 space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="font-semibold text-lg">Periodos</h3>
-                        <button
-                            onClick={() => setShowPeriodModal(true)}
-                            className="btn btn-xs btn-outline border-primary/20 text-primary hover:bg-primary/10 gap-1"
-                        >
-                            <Plus className="w-3 h-3" /> Nuevo
-                        </button>
                     </div>
                     <div className="space-y-2">
                         {periods.map(period => (
