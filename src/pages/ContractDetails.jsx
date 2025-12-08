@@ -19,7 +19,8 @@ export function ContractDetails({ contractId, onBack }) {
         numeroReserva: '',
         cantidadMedicamento: '',
         monto: '',
-        selectedItemId: ''
+        selectedItemId: '',
+        periodo: '00' // Default period code
     });
     const [orderError, setOrderError] = useState('');
 
@@ -169,6 +170,7 @@ export function ContractDetails({ contractId, onBack }) {
             numeroPedidoSICOP: orderForm.numeroPedidoSICOP,
             pur: orderForm.pur,
             numeroReserva: orderForm.numeroReserva,
+            periodo: orderForm.periodo, // Add to payload
             cantidadMedicamento: orderForm.cantidadMedicamento,
             monto: amount,
             descripcion: `SAP: ${orderForm.numeroPedidoSAP}`,
@@ -197,7 +199,8 @@ export function ContractDetails({ contractId, onBack }) {
                 numeroReserva: '',
                 cantidadMedicamento: '',
                 monto: '',
-                selectedItemId: contract.items?.[0]?.id || ''
+                selectedItemId: contract.items?.[0]?.id || '',
+                periodo: '00'
             });
             setOrderError('');
             setEditingOrder(null);
@@ -217,7 +220,8 @@ export function ContractDetails({ contractId, onBack }) {
             numeroReserva: order.numeroReserva || '',
             cantidadMedicamento: order.cantidadMedicamento || '',
             monto: order.monto.toString(),
-            selectedItemId: order.medicamentoId || (contract.items?.[0]?.id || '')
+            selectedItemId: order.medicamentoId || (contract.items?.[0]?.id || ''),
+            periodo: order.periodo || '00'
         });
         setShowOrderForm(true);
     };
@@ -370,6 +374,21 @@ export function ContractDetails({ contractId, onBack }) {
                                                     value={orderForm.fechaPedido}
                                                     onChange={handleInputChange}
                                                 />
+                                            </div>
+
+                                            <div className="input-group">
+                                                <label>Periodo</label>
+                                                <select
+                                                    name="periodo"
+                                                    value={orderForm.periodo}
+                                                    onChange={handleInputChange}
+                                                    className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                                >
+                                                    <option value="00">00</option>
+                                                    <option value="01">01</option>
+                                                    <option value="02">02</option>
+                                                    <option value="03">03</option>
+                                                </select>
                                             </div>
 
                                             <div className="input-group">

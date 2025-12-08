@@ -304,6 +304,7 @@ export const ContractService = {
             fecha_pedido: orderData.fechaPedido,
             numero_pedido_sap: sanitize(orderData.numeroPedidoSAP),
             numero_pedido_sicop: sanitize(orderData.numeroPedidoSICOP),
+            periodo: sanitize(orderData.periodo),
             cantidad_medicamento: parseInt(orderData.cantidadMedicamento) || 0,
             monto: parseFloat(orderData.monto) || 0,
             pur: sanitize(orderData.pur),
@@ -332,6 +333,7 @@ export const ContractService = {
             fecha_pedido: orderData.fechaPedido,
             numero_pedido_sap: sanitize(orderData.numeroPedidoSAP),
             numero_pedido_sicop: sanitize(orderData.numeroPedidoSICOP),
+            periodo: sanitize(orderData.periodo),
             cantidad_medicamento: parseInt(orderData.cantidadMedicamento) || 0,
             monto: parseFloat(orderData.monto) || 0,
             pur: sanitize(orderData.pur),
@@ -346,7 +348,6 @@ export const ContractService = {
         if (error) throw error;
         return data[0];
     },
-
     deleteOrder: async (id) => {
         const { error } = await supabase.from('orders').delete().eq('id', id);
         if (error) throw error;
