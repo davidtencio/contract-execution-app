@@ -137,7 +137,8 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                         executedAmount: totalExecuted,
                         budget: currentBudget,
                         moneda: activePeriod.moneda || c.moneda,
-                        expirationDate: activePeriod.fechaFin // Cache for stats
+                        expirationDate: activePeriod.fechaFin, // Cache for stats
+                        periodNames: periods.map(p => p.nombre) // Add period names for display
                     };
                 }));
 
@@ -260,6 +261,7 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                             <tr>
                                 <th className="px-4 py-3 rounded-l-lg">Ref. Legal</th>
                                 <th className="px-4 py-3">Código</th>
+                                <th className="px-4 py-3">Periodo</th>
                                 <th className="px-4 py-3">Medicamento</th>
                                 <th className="px-4 py-3">Proveedor</th>
                                 <th className="px-4 py-3">Estado</th>
@@ -297,6 +299,19 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                                         ) : (
                                             contract.codigo
                                         )}
+                                    </td>
+                                    <td className="px-4 py-3 text-center align-top font-medium text-xs">
+                                        <div className="flex flex-wrap gap-1 justify-center min-h-[1.5rem] items-center">
+                                            {contract.periodNames && contract.periodNames.length > 0 ? (
+                                                contract.periodNames.map((p, idx) => (
+                                                    <span key={idx} className="bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">
+                                                        {p}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-muted-foreground italic">-</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-4 py-3 align-top">
                                         {contract.items?.length > 0 ? (
