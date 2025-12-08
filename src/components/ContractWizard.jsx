@@ -15,6 +15,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
         proveedor: '',
         concurso: '',
         contratoLegal: '',
+        periodName: '', // New Field
 
         // Items (Medications)
         items: [{
@@ -48,6 +49,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                         proveedor: fullContract.proveedor,
                         concurso: fullContract.concurso || '',
                         contratoLegal: fullContract.contratoLegal || '',
+                        periodName: '', // Not loading period name for edit yet as it belongs to periods table, keep simple or fetch first period?
                         items: fullContract.items && fullContract.items.length > 0 ? fullContract.items.map(i => ({
                             id: i.id || Date.now() + Math.random(),
                             codigo: i.codigo,
@@ -56,7 +58,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                             precioUnitario: i.precioUnitario
                         })) : [{
                             id: Date.now(),
-                            codigo: fullContract.codigo, // Fallback for legacy data
+                            codigo: fullContract.codigo,
                             nombre: fullContract.nombre,
                             moneda: fullContract.moneda || 'USD',
                             precioUnitario: fullContract.precioUnitario
@@ -169,6 +171,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                     ContractService.updateContract(contractToEdit.id, contractPayload);
                 } else {
                     const year1Payload = {
+                        nombre: formData.periodName || 'Periodo 1', // Use form value
                         fechaInicio: formData.fechaInicio,
                         presupuestoInicial: parseFloat(formData.presupuestoInicial.toString().replace(/,/g, '')),
                         topeAnual: formData.topeAnual ? parseFloat(formData.topeAnual.toString().replace(/,/g, '')) : parseFloat(formData.presupuestoInicial.toString().replace(/,/g, '')),
@@ -297,7 +300,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                         </div>
 
                         {/* 2. Common Fields (Bottom) */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/20 rounded-xl border border-border/50">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/20 rounded-xl border border-border/50">
                             <div className="input-group">
                                 <label>Proveedor *</label>
                                 <input
@@ -324,6 +327,15 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                                     onChange={handleChange}
                                 />
                             </div>
+                            <div className="input-group">
+                                <label>Periodo</label>
+                                <input
+                                    name="periodName"
+                                    value={formData.periodName}
+                                    onChange={handleChange}
+                                    placeholder="Ej. 2024"
+                                />
+                            </div>
                         </div>
                     </div>
                 ) : (
@@ -331,7 +343,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                         <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 mb-4">
                             <h4 className="font-semibold text-primary text-sm flex items-center gap-2">
                                 <Check className="w-4 h-4" />
-                                Inicializando Año 1
+                                Inicializando {formData.periodName || 'Periodo'}
                             </h4>
                             <p className="text-xs text-muted-foreground mt-1">
                                 El sistema creará automáticamente el primer periodo contractual vinculado a este contrato.
@@ -431,7 +443,7 @@ export function ContractWizard({ onClose, onSaveSuccess, contractToEdit = null }
                     )
                 ) : (
                     <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
-                        {loading ? 'Guardando...' : 'Crear Contrato'}
+                        {loading ? 'Creando...' : 'Crear Contrato'}
                         {!loading && <Save className="w-4 h-4" />}
                     </button>
                 )}
