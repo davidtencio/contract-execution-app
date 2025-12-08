@@ -202,10 +202,10 @@ export function OrderHistory() {
                                                     e.stopPropagation();
                                                     handleEdit(order);
                                                 }}
-                                                className="hover:opacity-80 transition-opacity"
+                                                className="hover:opacity-80 transition-opacity cursor-pointer relative z-10 pointer-events-auto"
                                                 title="Editar pedido"
                                             >
-                                                <img src={editIcon} alt="Editar" className="w-8 h-8 pointer-events-none" />
+                                                <img src={editIcon} alt="Editar" className="w-8 h-8 pointer-events-none block" />
                                             </button>
                                         </td>
                                     </tr>
