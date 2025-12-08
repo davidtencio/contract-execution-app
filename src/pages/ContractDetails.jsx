@@ -616,14 +616,14 @@ export function ContractDetails({ contractId, onBack }) {
 
             {showPeriodModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden">
+                    <div className="bg-white w-full max-w-md rounded-2xl border border-gray-200 shadow-2xl overflow-hidden text-gray-900">
                         <div className="p-6">
                             <h3 className="text-xl font-bold mb-4">Agregar Nuevo Periodo</h3>
                             <div className="space-y-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Duración</label>
+                                    <label className="text-sm font-medium text-gray-700">Duración</label>
                                     <select
-                                        className="w-full bg-background border border-input rounded-md h-10 px-3"
+                                        className="w-full bg-white border border-gray-300 rounded-md h-10 px-3 text-black"
                                         value={newPeriodData.durationYears}
                                         onChange={e => setNewPeriodData({ ...newPeriodData, durationYears: e.target.value })}
                                     >
@@ -632,9 +632,9 @@ export function ContractDetails({ contractId, onBack }) {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm font-medium">Presupuesto Inicial ({contract.moneda === 'CRC' ? '₡' : '$'})</label>
+                                    <label className="text-sm font-medium text-gray-700">Presupuesto Inicial ({contract.moneda === 'CRC' ? '₡' : '$'})</label>
                                     <input
-                                        className="w-full bg-background border border-input rounded-md h-10 px-3"
+                                        className="w-full bg-white border border-gray-300 rounded-md h-10 px-3 text-black"
                                         value={newPeriodData.presupuesto}
                                         onChange={e => {
                                             const val = e.target.value.replace(/,/g, '');
@@ -644,14 +644,16 @@ export function ContractDetails({ contractId, onBack }) {
                                     />
                                 </div>
                             </div>
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button className="btn btn-ghost" onClick={() => setShowPeriodModal(false)}>Cancelar</button>
-                                <button className="btn btn-primary" onClick={handleAddPeriod}>Crear Periodo</button>
-                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button className="px-4 py-2 hover:bg-gray-100 rounded-md text-gray-700 transition-colors" onClick={() => setShowPeriodModal(false)}>Cancelar</button>
+                            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors shadow-sm font-medium" onClick={handleAddPeriod}>Crear Periodo</button>
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+                </div>
+    )
+}
+        </div >
     );
 }
