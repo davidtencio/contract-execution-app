@@ -28,7 +28,7 @@ export function OrderHistory() {
     }, []);
 
     const handleEdit = (order) => {
-        // alert("Debug: Botón editar presionado"); // Temporary debug
+        alert("Debug: Botón editar presionado para pedido " + order.id); // Temporary debug
         console.log("Edit button clicked for:", order);
         setSelectedOrder(order);
         setIsEditModalOpen(true);
