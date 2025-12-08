@@ -615,8 +615,8 @@ export function ContractDetails({ contractId, onBack }) {
 
 
             {showPeriodModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden animate-in zoom-in-95">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-card w-full max-w-md rounded-2xl border border-border shadow-2xl overflow-hidden">
                         <div className="p-6">
                             <h3 className="text-xl font-bold mb-4">Agregar Nuevo Periodo</h3>
                             <div className="space-y-4">
