@@ -213,6 +213,12 @@ export const ContractService = {
 
     createOrder: async (orderData) => {
         const sanitize = (val) => (val === '' || val === undefined || val === null ? null : val);
+        const sanitizeBigInt = (val) => {
+            if (!val) return null;
+            if (typeof val === 'string' && val.includes('_')) return null;
+            const num = parseInt(val);
+            return isNaN(num) ? null : num;
+        };
 
         const dbPayload = {
             period_id: orderData.periodId,
@@ -225,7 +231,7 @@ export const ContractService = {
             numero_reserva: sanitize(orderData.numeroReserva),
             descripcion: sanitize(orderData.descripcion),
             // Restore item linkage
-            item_id: orderData.medicamentoId ? sanitize(orderData.medicamentoId) : null,
+            item_id: sanitizeBigInt(orderData.medicamentoId),
             medicamento_nombre: sanitize(orderData.medicamentoNombre),
             medicamento_codigo: sanitize(orderData.medicamentoCodigo)
         };
@@ -236,6 +242,12 @@ export const ContractService = {
 
     updateOrder: async (id, orderData) => {
         const sanitize = (val) => (val === '' || val === undefined || val === null ? null : val);
+        const sanitizeBigInt = (val) => {
+            if (!val) return null;
+            if (typeof val === 'string' && val.includes('_')) return null;
+            const num = parseInt(val);
+            return isNaN(num) ? null : num;
+        };
 
         const dbPayload = {
             fecha_pedido: orderData.fechaPedido,
@@ -247,7 +259,7 @@ export const ContractService = {
             numero_reserva: sanitize(orderData.numeroReserva),
             descripcion: sanitize(orderData.descripcion),
             // Restore item linkage
-            item_id: orderData.medicamentoId ? sanitize(orderData.medicamentoId) : null,
+            item_id: sanitizeBigInt(orderData.medicamentoId),
             medicamento_nombre: sanitize(orderData.medicamentoNombre),
             medicamento_codigo: sanitize(orderData.medicamentoCodigo)
         };
