@@ -63,21 +63,48 @@ export const ContractService = {
         };
     },
 
-    createContract: async (contractData) => {
+    createContract: async (contractData, initialPeriodData) => {
+        // The Wizard sends { items: [...] } but DB expects flat fields.
+        // We take the first item as the primary contract info.
+        const primaryItem = contractData.items && contractData.items[0] ? contractData.items[0] : {};
+
         const dbPayload = {
-            codigo: contractData.codigo,
-            nombre: contractData.nombre,
+            codigo: primaryItem.codigo || contractData.codigo,
+            nombre: primaryItem.nombre || contractData.nombre,
             concurso: contractData.concurso,
             contrato_legal: contractData.contratoLegal,
             proveedor: contractData.proveedor,
-            precio_unitario: parseFloat(contractData.precioUnitario),
-            fecha_inicio: contractData.fechaInicio,
-            moneda: contractData.moneda || 'USD'
+            precio_unitario: parseFloat(primaryItem.precioUnitario || contractData.precioUnitario || 0),
+            fecha_inicio: initialPeriodData?.fechaInicio || contractData.fechaInicio, // Usually in period, but maybe useful here
+            moneda: primaryItem.moneda || contractData.moneda || 'USD'
         };
 
-        const { data, error } = await supabase.from('contracts').insert([dbPayload]).select();
-        if (error) throw error;
-        return { ...data[0], id: data[0].id };
+        const { data: contract, error: contractError } = await supabase
+            .from('contracts')
+            .insert([dbPayload])
+            .select()
+            .single();
+
+        if (contractError) throw contractError;
+
+        // Create Year 1 Period if data provided
+        if (initialPeriodData) {
+            const periodPayload = {
+                contract_id: contract.id,
+                nombre: 'Año 1',
+                fecha_inicio: initialPeriodData.fechaInicio,
+                fecha_fin: new Date(new Date(initialPeriodData.fechaInicio).setFullYear(new Date(initialPeriodData.fechaInicio).getFullYear() + 1)).toISOString(),
+                presupuesto_asignado: parseFloat(initialPeriodData.presupuestoInicial),
+                presupuesto_inicial: parseFloat(initialPeriodData.presupuestoInicial),
+                estado: 'Activo',
+                moneda: dbPayload.moneda
+            };
+
+            const { error: periodError } = await supabase.from('periods').insert([periodPayload]);
+            if (periodError) console.error("Error creating initial period:", periodError);
+        }
+
+        return { ...contract, id: contract.id };
     },
 
     getPeriodsByContractId: async (contractId) => {
