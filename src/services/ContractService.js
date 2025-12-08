@@ -234,7 +234,8 @@ export const ContractService = {
         return data.map(p => ({
             id: p.id,
             contractId: p.contract_id,
-            numeroAno: p.nombre, // Using 'nombre' for 'Año 1' etc
+            nombre: p.nombre, // Add this line
+            numeroAno: p.nombre, // Keep for compatibility
             fechaInicio: p.fecha_inicio,
             fechaFin: p.fecha_fin,
             presupuestoAsignado: p.presupuesto_asignado,
