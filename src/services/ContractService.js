@@ -6,15 +6,8 @@ export const ContractService = {
         const { data, error } = await supabase
             .from('contracts')
             .select(`
-                id,
-                codigo,
-                nombre,
-                concurso,
-                contrato_legal,
-                proveedor,
-                precio_unitario,
-                fecha_inicio,
-                moneda
+                *,
+                items:contract_items(*)
             `)
             .order('created_at', { ascending: false });
 
@@ -29,7 +22,14 @@ export const ContractService = {
             proveedor: c.proveedor,
             precioUnitario: c.precio_unitario,
             fechaInicio: c.fecha_inicio,
-            moneda: c.moneda
+            moneda: c.moneda,
+            items: c.items ? c.items.map(i => ({
+                id: i.id,
+                codigo: i.codigo,
+                nombre: i.nombre,
+                moneda: i.moneda,
+                precioUnitario: i.precio_unitario
+            })) : []
         })) || [];
     },
 
