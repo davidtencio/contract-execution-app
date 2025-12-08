@@ -205,7 +205,7 @@ export function OrderHistory() {
                                                 className="hover:opacity-80 transition-opacity"
                                                 title="Editar pedido"
                                             >
-                                                <img src={editIcon} alt="Editar" className="w-8 h-8" />
+                                                <img src={editIcon} alt="Editar" className="w-8 h-8 pointer-events-none" />
                                             </button>
                                         </td>
                                     </tr>
