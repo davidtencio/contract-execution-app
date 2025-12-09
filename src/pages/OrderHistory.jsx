@@ -202,7 +202,7 @@ export function OrderHistory() {
                                                     e.stopPropagation();
                                                     handleDelete(order.id);
                                                 }}
-                                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full flex items-center justify-center transition-all shadow-sm hover:shadow active:scale-95 mx-auto"
+                                                className="bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500 px-4 py-1.5 rounded-full flex items-center justify-center transition-all shadow-sm hover:shadow active:scale-95 mx-auto"
                                                 title="Eliminar pedido"
                                             >
                                                 <span className="text-xs font-semibold">Eliminar</span>
