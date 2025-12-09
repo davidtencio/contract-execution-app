@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
-import { Search, Download, FileText } from 'lucide-react';
-import { EditOrderModal } from '../components/EditOrderModal';
-import editIcon from '../assets/blue-pencil.svg';
+import { Search, Download, FileText, Trash2 } from 'lucide-react';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const loadOrders = async () => {
         try {
@@ -27,15 +23,17 @@ export function OrderHistory() {
         loadOrders();
     }, []);
 
-    const handleEdit = (order) => {
-        alert("Debug: Botón editar presionado para pedido " + order.id); // Temporary debug
-        console.log("Edit button clicked for:", order);
-        setSelectedOrder(order);
-        setIsEditModalOpen(true);
-    };
-
-    const handleSave = async () => {
-        await loadOrders(); // Refresh list
+    const handleDelete = async (id) => {
+        if (window.confirm('¿Estás seguro de que deseas eliminar este pedido? Esta acción no se puede deshacer.')) {
+            try {
+                await ContractService.deleteOrder(id);
+                // Optimistic update or reload
+                setOrders(currentOrders => currentOrders.filter(o => o.id !== id));
+            } catch (error) {
+                console.error("Error deleting order:", error);
+                alert("Error al eliminar el pedido. Por favor intente nuevamente.");
+            }
+        }
     };
 
     const filteredOrders = orders.filter(order => {
@@ -201,14 +199,13 @@ export function OrderHistory() {
                                             <button
                                                 type="button"
                                                 onClick={(e) => {
-                                                    console.log("Button onClick event fired");
                                                     e.stopPropagation();
-                                                    handleEdit(order);
+                                                    handleDelete(order.id);
                                                 }}
-                                                className="hover:opacity-80 transition-opacity cursor-pointer relative z-10 pointer-events-auto"
-                                                title="Editar pedido"
+                                                className="hover:bg-destructive/10 p-2 rounded-full transition-colors group"
+                                                title="Eliminar pedido"
                                             >
-                                                <img src={editIcon} alt="Editar" className="w-8 h-8 pointer-events-none block" />
+                                                <Trash2 className="w-5 h-5 text-muted-foreground group-hover:text-destructive transition-colors" />
                                             </button>
                                         </td>
                                     </tr>
@@ -232,12 +229,7 @@ export function OrderHistory() {
                 </div>
             </div>
 
-            <EditOrderModal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-                order={selectedOrder}
-                onSave={handleSave}
-            />
+
         </>
     );
 }
