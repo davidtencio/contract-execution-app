@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
 import { Search, Download, FileText } from 'lucide-react';
-import trashIcon from '../assets/red-trash.svg';
+import trashIcon from '../assets/trash-outline-red.svg';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
