@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
-import { Search, Download, FileText, Trash2 } from 'lucide-react';
+import { Search, Download, FileText } from 'lucide-react';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
@@ -202,10 +202,9 @@ export function OrderHistory() {
                                                     e.stopPropagation();
                                                     handleDelete(order.id);
                                                 }}
-                                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-full flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow active:scale-95 mx-auto"
+                                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-full flex items-center justify-center transition-all shadow-sm hover:shadow active:scale-95 mx-auto"
                                                 title="Eliminar pedido"
                                             >
-                                                <Trash2 className="w-4 h-4" />
                                                 <span className="text-xs font-semibold">Eliminar</span>
                                             </button>
                                         </td>
