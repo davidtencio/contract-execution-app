@@ -206,7 +206,7 @@ export function OrderHistory() {
                                                 className="hover:scale-110 transition-transform cursor-pointer"
                                                 title="Eliminar pedido"
                                             >
-                                                <img src={trashIcon} alt="Eliminar" className="w-8 h-8" />
+                                                <img src={trashIcon} alt="Eliminar" className="w-5 h-5" />
                                             </button>
                                         </td>
                                     </tr>
