@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
-import { Search, Download, FileText, Trash2 } from 'lucide-react';
+import { Search, Download, FileText } from 'lucide-react';
+import trashIcon from '../assets/red-trash.svg';
 
 export function OrderHistory() {
     const [orders, setOrders] = useState([]);
@@ -202,10 +203,10 @@ export function OrderHistory() {
                                                     e.stopPropagation();
                                                     handleDelete(order.id);
                                                 }}
-                                                className="hover:bg-destructive/10 p-2 rounded-full transition-colors group"
+                                                className="hover:scale-110 transition-transform cursor-pointer"
                                                 title="Eliminar pedido"
                                             >
-                                                <Trash2 className="w-5 h-5 text-muted-foreground group-hover:text-destructive transition-colors" />
+                                                <img src={trashIcon} alt="Eliminar" className="w-8 h-8" />
                                             </button>
                                         </td>
                                     </tr>
