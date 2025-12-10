@@ -13,6 +13,18 @@ export function ContractList({ onNavigate, onEdit }) {
         try {
             setLoading(true);
             const data = await ContractService.getAllContracts();
+
+            // Sort contracts by first medication name
+            data.sort((a, b) => {
+                const nameA = (a.items && a.items.length > 0)
+                    ? [...a.items].sort((x, y) => x.nombre.localeCompare(y.nombre))[0].nombre
+                    : a.nombre;
+                const nameB = (b.items && b.items.length > 0)
+                    ? [...b.items].sort((x, y) => x.nombre.localeCompare(y.nombre))[0].nombre
+                    : b.nombre;
+                return nameA.localeCompare(nameB);
+            });
+
             setContracts(data);
         } catch (error) {
             console.error("Error loading contracts:", error);
