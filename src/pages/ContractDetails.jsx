@@ -285,7 +285,7 @@ export function ContractDetails({ contractId, onBack }) {
                 <div>
                     <div className="flex flex-col gap-1">
                         {contract.items?.length > 0 ? (
-                            contract.items.map((item, idx) => (
+                            [...contract.items].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((item, idx) => (
                                 <h1 key={idx} className="text-2xl font-bold">
                                     {item.codigo} - {item.nombre}
                                 </h1>
@@ -481,8 +481,8 @@ export function ContractDetails({ contractId, onBack }) {
                                                         onChange={handleInputChange}
                                                         className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                                                     >
-                                                        {contract.items.map((item, idx) => (
-                                                            <option key={idx} value={idx}>
+                                                        {[...contract.items].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((item, idx) => (
+                                                            <option key={idx} value={contract.items.findIndex(i => i.id === item.id)}>
                                                                 {item.codigo} - {item.nombre} ({item.moneda === 'CRC' ? '₡' : '$'}{item.precioUnitario.toLocaleString('en-US')})
                                                             </option>
                                                         ))}
