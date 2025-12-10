@@ -163,7 +163,7 @@ export function ContractList({ onNavigate, onEdit }) {
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
                             <tr>
                                 <th className="px-6 py-4 font-medium text-left">Ref. Legal</th>
-                                <th className="px-6 py-4 font-medium text-left">Contrato</th>
+
                                 <th className="px-6 py-4 font-medium text-center">Periodos</th>
                                 <th className="px-6 py-4 font-medium text-center">Medicamento</th>
                                 <th className="px-6 py-4 font-medium text-center">Proveedor</th>
@@ -185,24 +185,6 @@ export function ContractList({ onNavigate, onEdit }) {
                                             {contract.contratoLegal && <div><span className="font-semibold">Cont:</span> {contract.contratoLegal}</div>}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 align-top text-left">
-                                        <div className="flex items-start gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mt-0.5 shrink-0">
-                                                <FileText className="w-4 h-4" />
-                                            </div>
-                                            <div>
-                                                {contract.items?.length > 0 ? (
-                                                    <div className="flex flex-col gap-3">
-                                                        {contract.items.map((item, idx) => (
-                                                            <div key={idx} className="font-medium text-foreground text-xs whitespace-nowrap h-6 flex items-center">{item.codigo}</div>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="font-medium text-foreground text-xs whitespace-nowrap">{contract.codigo}</div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </td>
                                     {/* Periodos Column */}
                                     <td className="px-6 py-4 align-top text-center text-xs font-medium text-foreground">
                                         <div className="flex flex-wrap gap-1 max-w-[150px] justify-center mx-auto">
@@ -222,12 +204,14 @@ export function ContractList({ onNavigate, onEdit }) {
                                             <div className="flex flex-col gap-3 items-center">
                                                 {contract.items.map((item, idx) => (
                                                     <div key={idx} className="text-sm truncate max-w-[200px] h-6 flex items-center justify-center" title={item.nombre}>
-                                                        {item.nombre}
+                                                        {item.nombre} ({item.codigo})
                                                     </div>
                                                 ))}
                                             </div>
                                         ) : (
-                                            contract.nombre
+                                            <>
+                                                {contract.nombre} {contract.codigo ? `(${contract.codigo})` : ''}
+                                            </>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground align-top text-center">{contract.proveedor}</td>
