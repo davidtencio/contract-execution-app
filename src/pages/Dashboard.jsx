@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '../components/KPICard';
 import { ContractService } from '../services/ContractService';
-import { DollarSign, AlertCircle, Clock, FileCheck, Activity } from 'lucide-react';
 
-export function Dashboard({ onNavigate, searchTerm = '' }) {
+import { DollarSign, AlertCircle, Clock, FileCheck, Activity, Search } from 'lucide-react';
+
+export function Dashboard({ onNavigate }) {
     const [contracts, setContracts] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [stats, setStats] = useState({
         totalContracts: 0,
         activeContracts: 0,
@@ -15,6 +17,8 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
         executedCRC: 0,
         executedUSD: 0
     });
+
+
 
     const [loading, setLoading] = useState(true);
 
@@ -169,12 +173,21 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
 
             {/* Recent Activity / Critical List */}
             <div className="card">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                     <h3 className="text-lg font-semibold">
                         Contratos Recientes
-                        {searchTerm && <span className="ml-2 text-sm font-normal text-muted-foreground">Resultados para: "{searchTerm}"</span>}
                     </h3>
-                    <button className="btn btn-ghost text-sm text-primary">Ver todos</button>
+
+                    <div className="relative w-full sm:w-64">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder="Buscar contrato..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-9 pr-4 py-2 bg-background border border-input rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                    </div>
                 </div>
 
                 <div className="overflow-x-auto">
