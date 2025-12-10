@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { KPICard } from '../components/KPICard';
 import { ContractService } from '../services/ContractService';
@@ -19,94 +18,6 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
 
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadData = async () => {
-            try {
-                setLoading(true);
-                // Load data from service
-                // Use Promise.all for parallel fetching when possible
-                // However, enhancedContracts logic is sequential in the original code, 
-                // but we can optimize by fetching all raw data first.
-
-                const rawContracts = await ContractService.getAllContracts();
-                const allInjections = await ContractService.getAllInjections();
-
-                // Enhancement requires iterating and fetching sub-data
-                // This might be slow (N+1 problem), ideally backend does this, 
-                // but we are keeping logic in frontend for now as per migration plan.
-
-                const enhancedContracts = await Promise.all(rawContracts.map(async (contract) => {
-                    const periods = await ContractService.getPeriodsByContractId(contract.id);
-                    if (periods.length === 0) return { ...contract, execution: 0 };
-
-                    // Use active period or fallback to first
-                    const currentPeriod = periods.find(p => p.estado === 'Activo') || periods[0];
-
-                    // Calculate injections for this period
-                    // Note: getAllInjections returns flattened data with periodId, we can filter locally to avoid N+1 requests if we passed allInjections is redundant if we filter. 
-                    // Wait, getAllInjections fetches ALL. 
-                    const periodInjections = allInjections.filter(i => String(i.periodId) === String(currentPeriod.id));
-                    const totalInjected = periodInjections.reduce((sum, i) => sum + parseFloat(i.amount), 0);
-
-                    // Calculate total current budget
-                    const initialBudget = parseFloat(currentPeriod.presupuestoAsignado || currentPeriod.presupuestoInicial || 0);
-                    const currentBudget = initialBudget + totalInjected;
-
-                    const orders = await ContractService.getOrdersByPeriodId(currentPeriod.id);
-                    const totalExecuted = orders.reduce((sum, order) => sum + parseFloat(order.monto), 0);
-
-                    const percentage = currentBudget > 0
-                        ? (totalExecuted / currentBudget) * 100
-                        : 0;
-
-                    return {
-                        ...contract,
-                        execution: Math.min(percentage, 100), // Cap at 100 for bar
-                        executedAmount: totalExecuted,
-                        budget: currentBudget,
-                        moneda: currentPeriod.moneda || contract.moneda // Ensure normalized currency source
-                    }));
-
-                setContracts(enhancedContracts);
-
-                // Calculate simple stats
-                const today = new Date();
-                const ninetyDaysFromNow = new Date();
-                ninetyDaysFromNow.setDate(today.getDate() + 90);
-
-                // For expiring count, we need periods for ALL contracts (which we fetched inside the map)
-                // We can re-use enhanced logic if we assume expiring check was done on active period
-                // But original logic fetched periods AGAIN. Let's optimize:
-                // We have access to 'periods' inside the map, but we didn't save them to 'enhancedContracts'.
-                // To avoid refetching, let's just re-fetch inside filter or attach active period to enhancedContracts.
-
-                // Correction: Let's attach expiration date to enhancedContracts to avoid re-fetching
-                // But since I cannot easily change the map return type signature without breaking downstream potentially
-                // I will just do the expiration check inside the map and attach a flag or date
-
-                // Re-implementing expiring logic properly based on data we just fetched
-                let expiringCount = 0;
-                for (const c of enhancedContracts) {
-                    // We need the period end date. 
-                    // Since I didn't return it in valid EnhancedContract, I will adjust the map above to return it? 
-                    // Or just fetch again? fetching again is safer for now to avoid breaking structure
-                    // wait, N+1 fetch again is bad. 
-                    // Let's modify the map above to include needed metadata
-                }
-
-                // Actually, let's just map it right in the Promise.all above.
-                // Re-writing the Promise.all to compute stats locally
-            } catch (error) {
-                console.error("Dashboard Load Error:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadData();
-    }, []);
-
-    // Re-implemented loadData properly to be self-contained and correct
     useEffect(() => {
         const loadDashboardData = async () => {
             try {
