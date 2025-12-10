@@ -260,7 +260,7 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/50">
                             <tr>
                                 <th className="px-4 py-3 rounded-l-lg">Ref. Legal</th>
-                                <th className="px-4 py-3">Código</th>
+
                                 <th className="px-4 py-3">Periodo</th>
                                 <th className="px-4 py-3">Medicamento</th>
                                 <th className="px-4 py-3">Proveedor</th>
@@ -289,17 +289,7 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                                             {contract.contratoLegal && <div><span className="font-semibold">Cont:</span> {contract.contratoLegal}</div>}
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 font-medium align-top">
-                                        {contract.items?.length > 0 ? (
-                                            <div className="flex flex-col gap-1 items-center">
-                                                {contract.items.map((item, idx) => (
-                                                    <div key={idx} className="h-6 flex items-center justify-center">{item.codigo}</div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            contract.codigo
-                                        )}
-                                    </td>
+
                                     <td className="px-4 py-3 text-center align-top font-medium text-xs">
                                         <div className="flex flex-wrap gap-1 justify-center min-h-[1.5rem] items-center">
                                             {contract.periodNames && contract.periodNames.length > 0 ? (
@@ -318,12 +308,14 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                                             <div className="flex flex-col gap-1 items-center">
                                                 {contract.items.map((item, idx) => (
                                                     <div key={idx} className="h-6 flex items-center justify-center text-sm truncate max-w-[200px]" title={item.nombre}>
-                                                        {item.nombre}
+                                                        {item.nombre} ({item.codigo})
                                                     </div>
                                                 ))}
                                             </div>
                                         ) : (
-                                            contract.nombre
+                                            <>
+                                                {contract.nombre} {contract.codigo ? `(${contract.codigo})` : ''}
+                                            </>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 align-top">{contract.proveedor}</td>
