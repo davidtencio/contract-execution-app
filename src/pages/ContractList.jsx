@@ -202,7 +202,7 @@ export function ContractList({ onNavigate, onEdit }) {
                                     <td className="px-6 py-4 font-medium align-top text-center">
                                         {contract.items?.length > 0 ? (
                                             <div className="flex flex-col gap-3 items-center">
-                                                {contract.items.map((item, idx) => (
+                                                {[...contract.items].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((item, idx) => (
                                                     <div key={idx} className="text-sm truncate max-w-[200px] h-6 flex items-center justify-center" title={item.nombre}>
                                                         {item.nombre} ({item.codigo})
                                                     </div>

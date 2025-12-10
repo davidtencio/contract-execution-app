@@ -306,7 +306,7 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                                     <td className="px-4 py-3 align-top">
                                         {contract.items?.length > 0 ? (
                                             <div className="flex flex-col gap-1 items-center">
-                                                {contract.items.map((item, idx) => (
+                                                {[...contract.items].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((item, idx) => (
                                                     <div key={idx} className="h-6 flex items-center justify-center text-sm truncate max-w-[200px]" title={item.nombre}>
                                                         {item.nombre} ({item.codigo})
                                                     </div>
