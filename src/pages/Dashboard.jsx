@@ -284,7 +284,7 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                                     className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
                                 >
                                     <td className="px-4 py-3 align-top">
-                                        <div className="flex flex-col gap-1 text-xs text-muted-foreground w-full items-center justify-center min-h-[1.5rem]">
+                                        <div className="flex flex-col gap-1 text-sm text-muted-foreground w-full items-center justify-center min-h-[1.5rem]">
                                             {contract.concurso && <div><span className="font-semibold">Conc:</span> {contract.concurso}</div>}
                                             {contract.contratoLegal && <div><span className="font-semibold">Cont:</span> {contract.contratoLegal}</div>}
                                         </div>
