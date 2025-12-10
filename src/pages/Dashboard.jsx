@@ -65,8 +65,7 @@ export function Dashboard({ onNavigate, searchTerm = '' }) {
                         executedAmount: totalExecuted,
                         budget: currentBudget,
                         moneda: currentPeriod.moneda || contract.moneda // Ensure normalized currency source
-                    };
-                }));
+                    }));
 
                 setContracts(enhancedContracts);
 
