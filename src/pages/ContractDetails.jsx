@@ -395,8 +395,8 @@ export function ContractDetails({ contractId, onBack }) {
 
                                 <div className="flex justify-between items-end mt-4">
                                     <div className="text-sm text-muted-foreground flex flex-col gap-1">
-                                        <span>Presupuesto Asignado: {contract.moneda === 'CRC' ? '₡' : '$'}{Number(selectedPeriod.presupuestoAsignado).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        <span className="text-red-400">Monto Ejecutado: {contract.moneda === 'CRC' ? '₡' : '$'}{orders.reduce((sum, order) => sum + parseFloat(order.monto), 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <span>Presupuesto Asignado: {contract.moneda === 'CRC' ? '₡' : '$'}{Number(selectedPeriod.presupuestoAsignado).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        <span className="text-red-400">Monto Ejecutado: {contract.moneda === 'CRC' ? '₡' : '$'}{orders.reduce((sum, order) => sum + parseFloat(order.monto), 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     {injections.length > 0 && (
                                         <div className="text-xs text-green-500 font-medium bg-green-500/10 px-2 py-1 rounded flex items-center gap-1">
