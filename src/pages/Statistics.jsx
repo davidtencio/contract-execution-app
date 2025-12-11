@@ -301,19 +301,23 @@ export function Statistics() {
                 </div>
                 <div className="flex items-end justify-between h-48 gap-2 pt-4 pb-2">
                     {stats.monthlyTrend?.map((month, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group">
-                            <div className="w-full max-w-[40px] bg-muted/50 rounded-t-lg relative h-full flex items-end overflow-hidden hover:bg-muted/80 transition-colors cursor-pointer">
+                        <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group gap-2">
+                            {/* Value Label - Always visible now */}
+                            <div className="text-[10px] font-bold text-muted-foreground mb-1 text-center">
+                                ${month.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </div>
+
+                            {/* Bar Container */}
+                            <div className="w-full max-w-[32px] bg-muted/30 rounded-t-sm relative h-32 flex items-end overflow-hidden">
                                 <div
-                                    className="w-full bg-indigo-500 rounded-t-lg transition-all duration-1000 ease-out group-hover:bg-indigo-400"
-                                    style={{ height: `${Math.max(month.percent, 4)}%` }} // Min 4% visibility
+                                    className="w-full bg-indigo-500 rounded-t-sm transition-all duration-1000 ease-out group-hover:bg-indigo-400"
+                                    style={{ height: `${Math.max(month.percent, 2)}%` }} // Min 2% visibility
                                 >
                                 </div>
-                                {/* Tooltipish value */}
-                                <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-popover px-2 py-1 rounded shadow text-popover-foreground">
-                                    ${month.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                </div>
                             </div>
-                            <span className="text-xs text-muted-foreground mt-2 font-medium uppercase">{month.label}</span>
+
+                            {/* Month Label */}
+                            <span className="text-xs text-muted-foreground font-medium uppercase">{month.label}</span>
                         </div>
                     ))}
                     {(!stats.monthlyTrend || stats.monthlyTrend.length === 0) && (
