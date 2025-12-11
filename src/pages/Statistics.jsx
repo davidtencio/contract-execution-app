@@ -219,8 +219,8 @@ export function Statistics() {
                             {/* Bar Container */}
                             <div className="w-full max-w-[32px] bg-muted/30 rounded-t-sm relative h-32 flex items-end overflow-hidden">
                                 <div
-                                    className="w-full bg-indigo-500 rounded-t-sm transition-all duration-1000 ease-out group-hover:bg-indigo-400"
-                                    style={{ height: `${Math.max(month.percent, 2)}%` }} // Min 2% visibility
+                                    className="w-full bg-emerald-500 rounded-t-sm transition-all duration-1000 ease-out group-hover:bg-emerald-400"
+                                    style={{ height: `${Math.max(month.percent, 4)}%` }} // Min 4% visibility
                                 >
                                 </div>
                             </div>
