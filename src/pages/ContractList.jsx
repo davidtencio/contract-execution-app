@@ -1,48 +1,21 @@
 
 import { useState, useEffect } from 'react';
-import { ContractService } from '../services/ContractService';
+import { useContracts, useDeleteContract } from '../hooks/useContracts';
 import { Search, Filter, MoreHorizontal, FileText, Trash2, Pencil } from 'lucide-react';
 
 export function ContractList({ onNavigate, onEdit }) {
-    const [contracts, setContracts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { data: contracts = [], isLoading: loading } = useContracts();
+    const deleteContractMutation = useDeleteContract();
+
+    // Local state for UI only
     const [searchTerm, setSearchTerm] = useState('');
     const [activeMenu, setActiveMenu] = useState(null);
-
-    const loadContracts = async () => {
-        try {
-            setLoading(true);
-            const data = await ContractService.getAllContracts();
-
-            // Sort contracts by first medication name
-            data.sort((a, b) => {
-                const nameA = (a.items && a.items.length > 0)
-                    ? [...a.items].sort((x, y) => x.nombre.localeCompare(y.nombre))[0].nombre
-                    : a.nombre;
-                const nameB = (b.items && b.items.length > 0)
-                    ? [...b.items].sort((x, y) => x.nombre.localeCompare(y.nombre))[0].nombre
-                    : b.nombre;
-                return nameA.localeCompare(nameB);
-            });
-
-            setContracts(data);
-        } catch (error) {
-            console.error("Error loading contracts:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        loadContracts();
-    }, []);
 
     const handleDelete = async (e, id) => {
         e.stopPropagation(); // Prevent row click
         if (window.confirm('¿Estás seguro de que deseas eliminar este contrato? Esta acción no se puede deshacer.')) {
             try {
-                await ContractService.deleteContract(id);
-                await loadContracts();
+                await deleteContractMutation.mutateAsync(id);
                 setActiveMenu(null);
             } catch (error) {
                 console.error("Error deleting contract:", error);

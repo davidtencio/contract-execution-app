@@ -102,7 +102,18 @@ export function Statistics() {
                 };
             }));
 
-            const topContracts = enhancedContracts.filter(Boolean).sort((a, b) => b.percentage - a.percentage).slice(0, 5);
+            // Deduplicate by code (keep highest percentage)
+            const uniqueContractsMap = new Map();
+            enhancedContracts.filter(Boolean).forEach(c => {
+                const key = c.codigo || c.nombre;
+                if (!uniqueContractsMap.has(key) || uniqueContractsMap.get(key).percentage < c.percentage) {
+                    uniqueContractsMap.set(key, c);
+                }
+            });
+
+            const topContracts = Array.from(uniqueContractsMap.values())
+                .sort((a, b) => b.percentage - a.percentage)
+                .slice(0, 10);
 
             // 3. Expiring Contracts (< 90 days)
             const today = new Date();
@@ -169,8 +180,8 @@ export function Statistics() {
         }
 
         orders.forEach(o => {
-            if (!o.fecha) return;
-            const d = new Date(o.fecha);
+            if (!o.fechaPedido) return;
+            const d = new Date(o.fechaPedido);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
             const match = last6Months.find(m => m.key === key);
             if (match) {
