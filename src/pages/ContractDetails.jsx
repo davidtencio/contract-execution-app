@@ -356,7 +356,7 @@ export function ContractDetails({ contractId, onBack }) {
                                     </button>
                                 </div>
                                 <div className="text-4xl font-bold text-foreground mb-4">
-                                    {contract.moneda === 'CRC' ? '₡' : '$'}{Number(saldoDisponible).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}
+                                    {contract.moneda === 'CRC' ? '₡' : '$'}{Number(saldoDisponible).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 3 })}
                                 </div>
 
                                 {/* Contract Details Grid */}
@@ -367,7 +367,7 @@ export function ContractDetails({ contractId, onBack }) {
                                             {(() => {
                                                 const price = contract.items?.length > 0 ? contract.items[0].precioUnitario : contract.precioUnitario;
                                                 const units = price > 0 ? saldoDisponible / price : 0;
-                                                return Math.floor(units).toLocaleString('es-ES');
+                                                return Math.floor(units).toLocaleString('en-US');
                                             })()}
                                         </p>
                                     </div>
@@ -376,7 +376,7 @@ export function ContractDetails({ contractId, onBack }) {
                                         <p className="font-semibold text-foreground">
                                             {contract.moneda === 'CRC' ? '₡' : '$'}
                                             {Number(contract.items?.length > 0 ? contract.items[0].precioUnitario : contract.precioUnitario)
-                                                .toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                                                .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
                                         </p>
                                     </div>
                                     <div>
@@ -401,7 +401,7 @@ export function ContractDetails({ contractId, onBack }) {
                                     {injections.length > 0 && (
                                         <div className="text-xs text-green-500 font-medium bg-green-500/10 px-2 py-1 rounded flex items-center gap-1">
                                             <TrendingUp className="w-3 h-3" />
-                                            +{contract.moneda === 'CRC' ? '₡' : '$'}{injections.reduce((a, b) => a + parseFloat(b.amount), 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            +{contract.moneda === 'CRC' ? '₡' : '$'}{injections.reduce((a, b) => a + parseFloat(b.amount), 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </div>
                                     )}
                                 </div>
