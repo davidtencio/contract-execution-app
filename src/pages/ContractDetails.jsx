@@ -591,7 +591,7 @@ export function ContractDetails({ contractId, onBack }) {
                                                 )}
                                                 <div className="text-sm text-muted-foreground flex gap-4">
                                                     <span>Fecha: {(order.fechaPedido || order.fecha || '').split('T')[0].split('-').reverse().join('/')}</span>
-                                                    {order.cantidadMedicamento && <span>Cant: {order.cantidadMedicamento}</span>}
+                                                    {order.cantidadMedicamento && <span>Cant: {Number(order.cantidadMedicamento).toLocaleString('en-US')}</span>}
                                                 </div>
                                             </div>
 
