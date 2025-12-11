@@ -20,7 +20,7 @@ export function ContractDetails({ contractId, onBack }) {
         cantidadMedicamento: '',
         monto: '',
         selectedItemId: '',
-        periodo: '00' // Default period code
+        periodo: '01' // Default period code
     });
     const [orderError, setOrderError] = useState('');
 
@@ -234,7 +234,7 @@ export function ContractDetails({ contractId, onBack }) {
                 cantidadMedicamento: '',
                 monto: '',
                 selectedItemId: contract.items?.[0]?.id || '',
-                periodo: '00'
+                periodo: '01'
             });
             setOrderError('');
             setEditingOrder(null);
@@ -255,7 +255,7 @@ export function ContractDetails({ contractId, onBack }) {
             cantidadMedicamento: order.cantidadMedicamento || '',
             monto: order.monto.toString(),
             selectedItemId: order.medicamentoId || (contract.items?.[0]?.id || ''),
-            periodo: order.periodo || '00'
+            periodo: order.periodo || '01'
         });
         setShowOrderForm(true);
     };
@@ -454,10 +454,10 @@ export function ContractDetails({ contractId, onBack }) {
                                                     onChange={handleInputChange}
                                                     className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                                                 >
-                                                    <option value="00">00</option>
                                                     <option value="01">01</option>
                                                     <option value="02">02</option>
                                                     <option value="03">03</option>
+                                                    <option value="04">04</option>
                                                 </select>
                                             </div>
 
