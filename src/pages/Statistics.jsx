@@ -155,7 +155,7 @@ export function Statistics() {
             setStats({
                 globalExecutionUSD: financials.usd,
                 globalExecutionCRC: financials.crc,
-                topContracts: enhancedContracts,
+                topContracts: topContracts,
                 expiringContracts: expiring,
                 topMedications: topMeds,
                 monthlyTrend: calculateMonthlyTrend(allOrders)
@@ -337,10 +337,19 @@ export function Statistics() {
                     </div>
                     <div className="space-y-4">
                         {stats.topContracts.map(c => (
-                            <div key={c.id} className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="font-medium truncate max-w-[200px]" title={c.nombre}>{c.codigo} - {c.nombre}</span>
-                                    <span className="font-bold text-orange-600">{c.percentage.toFixed(1)}%</span>
+                            <div key={c.id} className="space-y-2 p-3 bg-muted/20 rounded-lg hover:bg-muted/40 transition-colors">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div className="flex flex-col min-w-0">
+                                        <span className="font-medium text-sm truncate w-full" title={c.nombre}>
+                                            {c.nombre} <span className="text-xs text-muted-foreground">({c.codigo})</span>
+                                        </span>
+                                        <div className="text-xs text-muted-foreground flex gap-2 mt-0.5">
+                                            <span>Concurso: {c.concurso || 'N/A'}</span>
+                                            <span>•</span>
+                                            <span>Contrato: {c.contratoLegal || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                    <span className="font-bold text-orange-600 whitespace-nowrap">{c.percentage.toFixed(1)}%</span>
                                 </div>
                                 <div className="h-2 bg-muted rounded-full overflow-hidden">
                                     <div
