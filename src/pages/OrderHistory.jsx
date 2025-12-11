@@ -140,7 +140,6 @@ export function OrderHistory() {
                                     <th className="px-4 py-3 text-center">Concurso</th>
                                     <th className="px-4 py-3 text-center">N° Contrato</th>
                                     <th className="px-4 py-3 text-center">Periodo</th>
-                                    <th className="px-4 py-3 text-center">Cód. Interno</th>
                                     <th className="px-4 py-3 text-center">Medicamento</th>
                                     <th className="px-4 py-3 text-center">Proveedor</th>
                                     <th className="px-4 py-3 text-center">Ref. SAP / SICOP</th>
@@ -163,11 +162,8 @@ export function OrderHistory() {
                                         <td className="px-4 py-3 text-center text-muted-foreground">
                                             {order.periodName}
                                         </td>
-                                        <td className="px-4 py-3 font-medium text-primary text-center">
-                                            {order.contractCode}
-                                        </td>
                                         <td className="px-4 py-3 text-foreground/80 text-center">
-                                            {order.contractName}
+                                            {order.contractName} <span className="text-muted-foreground text-xs">({order.contractCode})</span>
                                         </td>
                                         <td className="px-4 py-3 text-muted-foreground text-center">
                                             {order.supplierName}
@@ -212,7 +208,7 @@ export function OrderHistory() {
                                 ))}
                                 {filteredOrders.length === 0 && (
                                     <tr>
-                                        <td colSpan="10" className="text-center py-12 text-muted-foreground">
+                                        <td colSpan="9" className="text-center py-12 text-muted-foreground">
                                             <div className="flex flex-col items-center gap-3">
                                                 <FileText className="w-12 h-12 opacity-20" />
                                                 <p>No se encontraron pedidos.</p>
@@ -220,6 +216,7 @@ export function OrderHistory() {
                                         </td>
                                     </tr>
                                 )}
+
                             </tbody>
                         </table>
                     </div>
