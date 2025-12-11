@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
+import { BarChart3, TrendingUp, AlertTriangle, DollarSign, Package } from 'lucide-react';
 
 export function Statistics() {
     const { data, isLoading, error } = useDashboard();
