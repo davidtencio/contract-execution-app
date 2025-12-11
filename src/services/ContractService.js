@@ -8,7 +8,7 @@ export const ContractService = {
             .select(`
                 *,
                 items:contract_items(*),
-                periods:periods(nombre)
+                periods:periods(*)
             `)
             .order('created_at', { ascending: false });
 
@@ -31,7 +31,20 @@ export const ContractService = {
                 moneda: i.moneda,
                 precioUnitario: i.precio_unitario
             })) : [],
-            periodos: c.periods ? c.periods.map(p => p.nombre).sort() : [] // Map period names
+            // Legacy for list display
+            periodos: c.periods ? c.periods.map(p => p.nombre).sort() : [],
+            // Full data for dashboard/stats optimization
+            fullPeriods: c.periods ? c.periods.map(p => ({
+                id: p.id,
+                contractId: p.contract_id,
+                nombre: p.nombre,
+                fechaInicio: p.fecha_inicio,
+                fechaFin: p.fecha_fin,
+                presupuestoAsignado: p.presupuesto_asignado,
+                presupuestoInicial: p.presupuesto_inicial,
+                estado: p.estado,
+                moneda: p.moneda
+            })).sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio)) : []
         })) || [];
     },
 

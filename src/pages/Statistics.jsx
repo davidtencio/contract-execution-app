@@ -1,202 +1,109 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ContractService } from '../services/ContractService';
-import { KPICard } from '../components/KPICard';
-import { BarChart3, TrendingUp, AlertTriangle, DollarSign, Package } from 'lucide-react';
+import { useDashboard } from '../hooks/useDashboard';
 
 export function Statistics() {
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({
-        globalExecutionUSD: { budget: 0, executed: 0 },
-        globalExecutionCRC: { budget: 0, executed: 0 },
-        topContracts: [],
-        expiringContracts: [],
-        topMedications: [],
-        monthlyTrend: []
-    });
+    const { data, isLoading, error } = useDashboard();
 
-    useEffect(() => {
-        loadData();
-        const interval = setInterval(loadData, 30000); // Increased interval for network
-        return () => clearInterval(interval);
-    }, []);
+    const stats = useMemo(() => {
+        if (!data) return {
+            globalExecutionUSD: { budget: 0, executed: 0 },
+            globalExecutionCRC: { budget: 0, executed: 0 },
+            topContracts: [],
+            expiringContracts: [],
+            topMedications: [],
+            monthlyTrend: []
+        };
 
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            const contracts = await ContractService.getAllContracts() || [];
-            const allOrders = await ContractService.getAllOrdersWithDetails() || [];
-            const allInjections = await ContractService.getAllInjections() || [];
+        const { contracts, stats: dashboardStats, allOrders } = data;
 
-            // 1. Financials (USD & CRC)
-            // Parallel fetch optimization not easily possible here without massive refactor of reduce logic
-            // We need to fetch periods for each contract used in calculation.
-            // Let's pre-fetch everything we can.
-
-            // To avoid N+1 in reduce, we will fetch all periods for all contracts first? 
-            // "getAllPeriods" doesn't exist. We have to map over contracts.
-            // This is heavy.
-
-            const contractsWithPeriods = await Promise.all(contracts.map(async c => {
-                const periods = await ContractService.getPeriodsByContractId(c.id);
-                return { ...c, periods };
+        // 1. Top Contracts
+        const topContracts = contracts
+            .sort((a, b) => b.execution - a.execution) // Desdending execution
+            .slice(0, 10)
+            .map(c => ({
+                id: c.id,
+                nombre: c.nombre,
+                codigo: c.codigo,
+                concurso: c.concurso,
+                contratoLegal: c.contratoLegal,
+                percentage: c.execution
             }));
 
-            const financials = await contractsWithPeriods.reduce(async (accPromise, contract) => {
-                const acc = await accPromise;
-                const periods = contract.periods || [];
-                const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
-                if (!activePeriod) return acc;
+        // 2. Expiring Contracts
+        const today = new Date();
+        const ninetyDays = new Date();
+        ninetyDays.setDate(today.getDate() + 90);
 
-                // Determine currency
-                let currency = (activePeriod.moneda || contract.moneda || 'USD').toUpperCase();
-                const isCRC = currency.includes('COLONES') || currency.includes('CRC');
-                const target = isCRC ? acc.crc : acc.usd;
-
-                // Budget
-                const initial = parseFloat(activePeriod.presupuestoAsignado || 0);
-                const injected = allInjections
-                    .filter(i => String(i.periodId) === String(activePeriod.id))
-                    .reduce((sum, i) => sum + parseFloat(i.amount), 0);
-                target.budget += (initial + injected);
-
-                // Execution
-                // Need orders for this period. 
-                // We have allOrders (detailed), we can filter them by periodId?
-                // Problem: allOrders from getAllOrdersWithDetails might not have periodId directly if flatten logic dropped it? 
-                // Let's check Service: getAllOrdersWithDetails returns id, periodId (from simple join potentially). 
-                // Wait, the new Service implementation of getAllOrdersWithDetails DOES NOT return `periodId` explicitly in the top level select if I didn't verify it. 
-                // Checking Service: select(..., periodId: ID_Periodo, ...) -> It DOES NOT in the flatten map. 
-                // I need to use getOrdersByPeriodId OR rely on allOrders having it.
-                // Let's fetch orders for period to be safe/consistent with Dashboard logic
-
-                const orders = await ContractService.getOrdersByPeriodId(activePeriod.id);
-                const executed = orders.reduce((sum, o) => sum + parseFloat(o.monto), 0);
-                target.executed += executed;
-
-                return acc;
-            }, Promise.resolve({ usd: { budget: 0, executed: 0 }, crc: { budget: 0, executed: 0 } }));
-
-            // 2. Top Contracts by Execution %
-            const enhancedContracts = await Promise.all(contractsWithPeriods.map(async c => {
-                const periods = c.periods;
-                const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
-                if (!activePeriod) return null;
-
-                const initial = parseFloat(activePeriod.presupuestoAsignado || 0);
-                const injected = allInjections
-                    .filter(i => String(i.periodId) === String(activePeriod.id))
-                    .reduce((sum, i) => sum + parseFloat(i.amount), 0);
-                const totalBudget = initial + injected;
-
-                const orders = await ContractService.getOrdersByPeriodId(activePeriod.id);
-                const executed = orders.reduce((sum, o) => sum + parseFloat(o.monto), 0);
-
-                const percentage = totalBudget > 0 ? (executed / totalBudget) * 100 : 0;
-
-                return {
-                    ...c,
-                    percentage,
-                    totalBudget,
-                    executed
-                };
-            }));
-
-            // Deduplicate by code (keep highest percentage)
-            const uniqueContractsMap = new Map();
-            enhancedContracts.filter(Boolean).forEach(c => {
-                const key = c.codigo || c.nombre;
-                if (!uniqueContractsMap.has(key) || uniqueContractsMap.get(key).percentage < c.percentage) {
-                    uniqueContractsMap.set(key, c);
-                }
-            });
-
-            const topContracts = Array.from(uniqueContractsMap.values())
-                .sort((a, b) => b.percentage - a.percentage)
-                .slice(0, 10);
-
-            // 3. Expiring Contracts (< 90 days)
-            const today = new Date();
-            const ninetyDays = new Date();
-            ninetyDays.setDate(today.getDate() + 90);
-
-            const expiring = contractsWithPeriods.map(c => {
-                const periods = c.periods;
-                const activePeriod = periods.find(p => p.estado === 'Activo');
-                if (!activePeriod) return null;
-                const end = new Date(activePeriod.fechaFin);
-                if (end >= today && end <= ninetyDays) {
-                    return { ...c, expirationDate: activePeriod.fechaFin };
-                }
-                return null;
-            }).filter(Boolean);
-
-            // 4. Top Medications
-            const medicationMap = {};
-            // allOrders has medicine name flattened
-            allOrders.forEach(order => {
-                const name = order.medicamentoNombre || order.contractName || 'Desconocido';
-                const amount = parseFloat(order.monto);
-                const currency = order.contractCurrency || 'CRC';
-
-                const amountInUSD = currency === 'CRC' ? amount / 500 : amount;
-
-                if (!medicationMap[name]) {
-                    medicationMap[name] = { name, totalUSD: 0, count: 0 };
-                }
-                medicationMap[name].totalUSD += amountInUSD;
-                medicationMap[name].count += 1;
-            });
-
-            const topMeds = Object.values(medicationMap)
-                .sort((a, b) => b.totalUSD - a.totalUSD)
-                .slice(0, 5);
-
-            setStats({
-                globalExecutionUSD: financials.usd,
-                globalExecutionCRC: financials.crc,
-                topContracts: topContracts,
-                expiringContracts: expiring,
-                topMedications: topMeds,
-                monthlyTrend: calculateMonthlyTrend(allOrders)
-            });
-            setError(null);
-        } catch (err) {
-            console.error("Statistics Error:", err);
-            setError("Error al cargar estadísticas: " + err.message);
-        }
-    };
-
-    const calculateMonthlyTrend = (orders) => {
-        const last6Months = [];
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
-            last6Months.push({
-                key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-                label: d.toLocaleString('es-ES', { month: 'short' }),
-                total: 0
-            });
-        }
-
-        orders.forEach(o => {
-            if (!o.fechaPedido) return;
-            const d = new Date(o.fechaPedido);
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            const match = last6Months.find(m => m.key === key);
-            if (match) {
-                // Normalize to simplified USD for viz
-                let val = parseFloat(o.monto);
-                // Heuristic: if amount > 1,000,000 assume CRC, divide by 500
-                if (val > 1000000) val = val / 500;
-                match.total += val;
-            }
+        const expiringContracts = contracts.filter(c => {
+            if (!c.expirationDate) return false;
+            const end = new Date(c.expirationDate);
+            return end >= today && end <= ninetyDays;
         });
 
-        // Normalize for height (0-100%)
-        const max = Math.max(...last6Months.map(m => m.total)) || 1;
-        return last6Months.map(m => ({ ...m, percent: (m.total / max) * 100 }));
-    };
+        // 3. Top Medications
+        const medicationMap = {};
+        allOrders.forEach(order => {
+            const name = order.medicamentoNombre || order.contractName || 'Desconocido';
+            const amount = parseFloat(order.monto);
+            const currency = order.contractCurrency || 'CRC';
+            const amountInUSD = currency === 'CRC' ? amount / 500 : amount;
+
+            if (!medicationMap[name]) {
+                medicationMap[name] = { name, totalUSD: 0, count: 0 };
+            }
+            medicationMap[name].totalUSD += amountInUSD;
+            medicationMap[name].count += 1;
+        });
+
+        const topMedications = Object.values(medicationMap)
+            .sort((a, b) => b.totalUSD - a.totalUSD)
+            .slice(0, 5);
+
+        // 4. Monthly Trend
+        const calculateMonthlyTrend = (orders) => {
+            const last6Months = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date();
+                d.setMonth(d.getMonth() - i);
+                last6Months.push({
+                    key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+                    label: d.toLocaleString('es-ES', { month: 'short' }),
+                    total: 0
+                });
+            }
+
+            orders.forEach(o => {
+                if (!o.fechaPedido) return;
+                const d = new Date(o.fechaPedido);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const match = last6Months.find(m => m.key === key);
+                if (match) {
+                    let val = parseFloat(o.monto);
+                    if (val > 1000000) val = val / 500; // Rough conversion for viz
+                    match.total += val;
+                }
+            });
+
+            const max = Math.max(...last6Months.map(m => m.total)) || 1;
+            return last6Months.map(m => ({ ...m, percent: (m.total / max) * 100 }));
+        };
+
+        return {
+            globalExecutionUSD: { budget: dashboardStats.budgetUSD, executed: dashboardStats.executedUSD },
+            globalExecutionCRC: { budget: dashboardStats.budgetCRC, executed: dashboardStats.executedCRC },
+            topContracts,
+            expiringContracts,
+            topMedications,
+            monthlyTrend: calculateMonthlyTrend(allOrders)
+        };
+    }, [data]);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
