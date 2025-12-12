@@ -20,34 +20,46 @@ export function BudgetInjections({ mode = 'management' }) {
         loadData();
     }, []);
 
-    const loadData = () => {
-        const allInjections = ContractService.getAllInjections();
-        const allContracts = ContractService.getAllContracts();
+    const loadData = async () => {
+        try {
+            const [allInjections, allContracts, allOrders] = await Promise.all([
+                ContractService.getAllInjections(),
+                ContractService.getAllContracts(),
+                ContractService.getAllOrdersWithDetails()
+            ]);
 
-        // Enrich contracts with balance data
-        const enriched = allContracts.map(c => {
-            const periods = ContractService.getPeriodsByContractId(c.id);
-            const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
-            if (!activePeriod) return { ...c, saldo: 0 };
+            // Enrich contracts with balance data
+            const enriched = allContracts.map(c => {
+                // Use pre-fetched fullPeriods from getAllContracts
+                const periods = c.fullPeriods || [];
+                const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
 
-            // Calc balance: (Initial + Injections) - (Orders)
-            const periodInjections = allInjections.filter(i => String(i.periodId) === String(activePeriod.id));
-            const totalInjected = periodInjections.reduce((sum, i) => sum + parseFloat(i.amount), 0);
-            const orders = ContractService.getOrdersByPeriodId ? ContractService.getOrdersByPeriodId(activePeriod.id) : [];
-            const totalSpent = orders.reduce((sum, o) => sum + parseFloat(o.montoTotal || 0), 0);
-            const initialBudget = parseFloat(activePeriod.presupuestoAsignado || activePeriod.presupuestoInicial || 0);
-            const saldo = initialBudget + totalInjected - totalSpent;
+                if (!activePeriod) return { ...c, saldo: 0, currency: c.moneda || 'USD' };
 
-            let rawCurrency = (activePeriod.moneda || c.moneda || 'USD').toUpperCase();
-            let currency = 'USD';
-            if (rawCurrency.includes('COLONES') || rawCurrency.includes('CRC') || rawCurrency === 'COLON') {
-                currency = 'CRC';
-            }
-            return { ...c, saldo, currency };
-        });
+                // Calc balance: (Initial + Injections) - (Orders)
+                const periodInjections = allInjections.filter(i => String(i.periodId) === String(activePeriod.id));
+                const totalInjected = periodInjections.reduce((sum, i) => sum + parseFloat(i.amount), 0);
 
-        setInjections(allInjections);
-        setContracts(enriched);
+                // Filter orders for this period
+                const periodOrders = allOrders.filter(o => String(o.periodId) === String(activePeriod.id));
+                const totalSpent = periodOrders.reduce((sum, o) => sum + parseFloat(o.monto || o.montoTotal || 0), 0);
+
+                const initialBudget = parseFloat(activePeriod.presupuestoAsignado || activePeriod.presupuestoInicial || 0);
+                const saldo = initialBudget + totalInjected - totalSpent;
+
+                let rawCurrency = (activePeriod.moneda || c.moneda || 'USD').toUpperCase();
+                let currency = 'USD';
+                if (rawCurrency.includes('COLONES') || rawCurrency.includes('CRC') || rawCurrency === 'COLON') {
+                    currency = 'CRC';
+                }
+                return { ...c, saldo, currency };
+            });
+
+            setInjections(allInjections);
+            setContracts(enriched);
+        } catch (error) {
+            console.error("Error loading data:", error);
+        }
     };
 
     const handleAddInjection = (data) => {
