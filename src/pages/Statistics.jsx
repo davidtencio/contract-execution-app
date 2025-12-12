@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useDashboard } from '../hooks/useDashboard';
 import { BarChart3, TrendingUp, AlertTriangle, DollarSign, Package } from 'lucide-react';
 
 export function Statistics() {
     const { data, isLoading, error } = useDashboard();
+    const [chartCurrency, setChartCurrency] = useState('USD');
 
     const stats = useMemo(() => {
         if (!data) return {
@@ -69,7 +70,8 @@ export function Statistics() {
                 last6Months.push({
                     key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
                     label: d.toLocaleString('es-ES', { month: 'short' }),
-                    total: 0
+                    usd: 0,
+                    crc: 0
                 });
             }
 
@@ -79,14 +81,25 @@ export function Statistics() {
                 const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
                 const match = last6Months.find(m => m.key === key);
                 if (match) {
-                    let val = parseFloat(o.monto);
-                    if (val > 1000000) val = val / 500; // Rough conversion for viz
-                    match.total += val;
+                    const rawVal = parseFloat(o.monto);
+                    const currency = (o.contractCurrency || 'USD').toUpperCase();
+
+                    if (currency.includes('COLONES') || currency === 'CRC') {
+                        match.crc += rawVal;
+                    } else {
+                        match.usd += rawVal;
+                    }
                 }
             });
 
-            const max = Math.max(...last6Months.map(m => m.total)) || 1;
-            return last6Months.map(m => ({ ...m, percent: (m.total / max) * 100 }));
+            const maxUSD = Math.max(...last6Months.map(m => m.usd)) || 1;
+            const maxCRC = Math.max(...last6Months.map(m => m.crc)) || 1;
+
+            return last6Months.map(m => ({
+                ...m,
+                percentUSD: (m.usd / maxUSD) * 100,
+                percentCRC: (m.crc / maxCRC) * 100
+            }));
         };
 
         return {
@@ -204,31 +217,53 @@ export function Statistics() {
 
             {/* Monthly Trend Chart */}
             <div className="card">
-                <div className="flex items-center gap-2 mb-6">
-                    <BarChart3 className="w-5 h-5 text-indigo-500" />
-                    <h3 className="font-semibold text-lg">Tendencia de Gasto (Últimos 6 Meses)</h3>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-indigo-500" />
+                        <h3 className="font-semibold text-lg">Tendencia de Gasto (Últimos 6 Meses)</h3>
+                    </div>
+                    <div className="flex bg-muted/30 p-1 rounded-lg">
+                        <button
+                            onClick={() => setChartCurrency('USD')}
+                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartCurrency === 'USD' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            USD ($)
+                        </button>
+                        <button
+                            onClick={() => setChartCurrency('CRC')}
+                            className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${chartCurrency === 'CRC' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                        >
+                            CRC (₡)
+                        </button>
+                    </div>
                 </div>
                 <div className="flex items-end justify-between h-48 gap-2 pt-4 pb-2">
-                    {stats.monthlyTrend?.map((month, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group gap-2">
-                            {/* Value Label - Always visible now */}
-                            <div className="text-[10px] font-bold text-muted-foreground mb-1 text-center">
-                                ${month.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </div>
+                    {stats.monthlyTrend?.map((month, idx) => {
+                        const value = chartCurrency === 'USD' ? month.usd : month.crc;
+                        const percent = chartCurrency === 'USD' ? month.percentUSD : month.percentCRC;
+                        const symbol = chartCurrency === 'USD' ? '$' : '₡';
 
-                            {/* Bar Container */}
-                            <div className="w-full max-w-[32px] bg-muted/30 rounded-t-sm relative h-32 flex items-end overflow-hidden">
-                                <div
-                                    className="w-full bg-emerald-500 rounded-t-sm transition-all duration-1000 ease-out group-hover:bg-emerald-400"
-                                    style={{ height: `${Math.max(month.percent, 4)}%` }} // Min 4% visibility
-                                >
+                        return (
+                            <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group gap-2">
+                                {/* Value Label - Always visible now */}
+                                <div className="text-[10px] font-bold text-muted-foreground mb-1 text-center">
+                                    {symbol}{value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </div>
-                            </div>
 
-                            {/* Month Label */}
-                            <span className="text-xs text-muted-foreground font-medium uppercase">{month.label}</span>
-                        </div>
-                    ))}
+                                {/* Bar Container */}
+                                <div className="w-full max-w-[32px] bg-muted/30 rounded-t-sm relative h-32 flex items-end overflow-hidden">
+                                    <div
+                                        className={`w-full rounded-t-sm transition-all duration-1000 ease-out ${chartCurrency === 'USD' ? 'bg-blue-500 group-hover:bg-blue-400' : 'bg-green-500 group-hover:bg-green-400'}`}
+                                        style={{ height: `${Math.max(percent, 4)}%` }} // Min 4% visibility
+                                    >
+                                    </div>
+                                </div>
+
+                                {/* Month Label */}
+                                <span className="text-xs text-muted-foreground font-medium uppercase">{month.label}</span>
+                            </div>
+                        );
+                    })}
                     {(!stats.monthlyTrend || stats.monthlyTrend.length === 0) && (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                             Cargando datos...
