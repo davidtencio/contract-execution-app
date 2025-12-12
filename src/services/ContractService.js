@@ -440,26 +440,36 @@ export const ContractService = {
                         nombre,
                         contrato_legal,
                         proveedor,
-                        concurso
+                        concurso,
+                        moneda
                     )
                 )
             `);
 
         if (error) throw error;
 
-        return data.map(i => ({
-            id: i.id,
-            periodId: i.period_id,
-            amount: i.amount,
-            date: i.fecha,
-            justification: i.descripcion,
+        return data.map(i => {
+            const rawCurrency = (i.period?.contract?.moneda || 'CRC').toUpperCase();
+            let currency = 'USD';
+            if (rawCurrency.includes('COLONES') || rawCurrency.includes('CRC') || rawCurrency === 'COLON') {
+                currency = 'CRC';
+            }
 
-            contractId: i.period?.contract?.id,
-            contractCode: i.period?.contract?.codigo || 'N/A',
-            contractLegal: i.period?.contract?.contrato_legal || 'N/A',
-            contractName: i.period?.contract?.nombre || 'N/A',
-            concurso: i.period?.contract?.concurso || 'N/A'
-        }));
+            return {
+                id: i.id,
+                periodId: i.period_id,
+                amount: i.amount,
+                date: i.fecha,
+                justification: i.descripcion,
+
+                contractId: i.period?.contract?.id,
+                contractCode: i.period?.contract?.codigo || 'N/A',
+                contractLegal: i.period?.contract?.contrato_legal || 'N/A',
+                contractName: i.period?.contract?.nombre || 'N/A',
+                concurso: i.period?.contract?.concurso || 'N/A',
+                currency: currency
+            };
+        });
     },
 
     addBudgetInjection: async (injectionData) => {
