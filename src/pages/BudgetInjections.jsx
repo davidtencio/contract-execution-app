@@ -2,15 +2,13 @@ import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
 import { Plus, FileText, Search, TrendingUp, ArrowRight, ExternalLink, Pencil, X } from 'lucide-react';
 import { BudgetInjectionForm } from '../components/BudgetInjectionForm';
-import { BudgetInjectionModal } from '../components/BudgetInjectionModal';
 
 export function BudgetInjections({ mode = 'management' }) {
     const [injections, setInjections] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [selectedContractId, setSelectedContractId] = useState('');
 
-    // Modal States
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    // Edit State
     const [editingInjection, setEditingInjection] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -18,87 +16,64 @@ export function BudgetInjections({ mode = 'management' }) {
     const [contractSearch, setContractSearch] = useState('');
     const [injectionSearch, setInjectionSearch] = useState('');
 
-    const [loading, setLoading] = useState(true);
-
     useEffect(() => {
         loadData();
     }, []);
 
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            const allInjections = await ContractService.getAllInjections();
-            const allContracts = await ContractService.getAllContracts();
+    const loadData = () => {
+        const allInjections = ContractService.getAllInjections();
+        const allContracts = ContractService.getAllContracts();
 
-            // Enrich contracts with balance data
-            // Requires fetching periods/orders per contract which is heavy.
-            // Optimization: Fetch all periods/orders might be too much.
-            // Let's iterate and await (or Promise.all)
+        // Enrich contracts with balance data
+        const enriched = allContracts.map(c => {
+            const periods = ContractService.getPeriodsByContractId(c.id);
+            const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
+            if (!activePeriod) return { ...c, saldo: 0 };
 
-            const enriched = await Promise.all(allContracts.map(async c => {
-                const periods = await ContractService.getPeriodsByContractId(c.id);
-                const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
-                if (!activePeriod) return { ...c, saldo: 0 };
+            // Calc balance: (Initial + Injections) - (Orders)
+            const periodInjections = allInjections.filter(i => String(i.periodId) === String(activePeriod.id));
+            const totalInjected = periodInjections.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+            const orders = ContractService.getOrdersByPeriodId ? ContractService.getOrdersByPeriodId(activePeriod.id) : [];
+            const totalSpent = orders.reduce((sum, o) => sum + parseFloat(o.montoTotal || 0), 0);
+            const initialBudget = parseFloat(activePeriod.presupuestoAsignado || activePeriod.presupuestoInicial || 0);
+            const saldo = initialBudget + totalInjected - totalSpent;
 
-                // Calc balance: (Initial + Injections) - (Orders)
-                // periodInjections can be filtered from allInjections if it has periodId, 
-                // OR we fetch specific injections. Ideally Filter.
-                // Assuming allInjections has periodId
-                const periodInjections = allInjections.filter(i => String(i.periodId) === String(activePeriod.id));
-                const totalInjected = periodInjections.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+            let rawCurrency = (activePeriod.moneda || c.moneda || 'USD').toUpperCase();
+            let currency = 'USD';
+            if (rawCurrency.includes('COLONES') || rawCurrency.includes('CRC') || rawCurrency === 'COLON') {
+                currency = 'CRC';
+            }
+            return { ...c, saldo, currency };
+        });
 
-                const orders = await ContractService.getOrdersByPeriodId(activePeriod.id);
-                const totalSpent = orders.reduce((sum, o) => sum + parseFloat(o.monto || 0), 0); // Note: check order model field name (monto vs montoTotal)
-
-                const initialBudget = parseFloat(activePeriod.presupuestoAsignado || activePeriod.presupuestoInicial || 0);
-                const saldo = initialBudget + totalInjected - totalSpent;
-
-                let rawCurrency = (activePeriod.moneda || c.moneda || 'USD').toUpperCase();
-                let currency = 'USD';
-                if (rawCurrency.includes('COLONES') || rawCurrency.includes('CRC') || rawCurrency === 'COLON') {
-                    currency = 'CRC';
-                }
-                return { ...c, saldo, currency };
-            }));
-
-            setInjections(allInjections);
-            setContracts(enriched);
-        } catch (error) {
-            console.error("Error loading budget data:", error);
-        } finally {
-            setLoading(false);
-        }
+        setInjections(allInjections);
+        setContracts(enriched);
     };
 
-    const handleAddInjection = async (data) => {
-        try {
-            // Check if updating
-            if (editingInjection) {
-                await ContractService.updateBudgetInjection(editingInjection.id, data);
-                alert('Inyección actualizada correctamente');
-                handleCloseEdit();
-            } else {
-                const periods = await ContractService.getPeriodsByContractId(parseInt(selectedContractId));
-                const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
+    const handleAddInjection = (data) => {
+        // Check if updating
+        if (editingInjection) {
+            ContractService.updateBudgetInjection(editingInjection.id, data);
+            alert('Inyección actualizada correctamente');
+            handleCloseEdit();
+        } else {
+            const periods = ContractService.getPeriodsByContractId(parseInt(selectedContractId)) || [];
+            const activePeriod = periods.find(p => p.estado === 'Activo') || periods[0];
 
-                if (!activePeriod) {
-                    alert('El contrato seleccionado no tiene periodos activos');
-                    return;
-                }
-
-                await ContractService.addBudgetInjection({
-                    contractId: parseInt(selectedContractId),
-                    periodId: activePeriod.id,
-                    ...data
-                });
-                alert('Inyección aplicada correctamente');
-                setSelectedContractId(''); // Reset selection only on add
+            if (!activePeriod) {
+                alert('El contrato seleccionado no tiene periodos activos');
+                return;
             }
-            await loadData();
-        } catch (error) {
-            console.error("Error saving injection:", error);
-            alert("Error al guardar inyección");
+
+            ContractService.addBudgetInjection({
+                contractId: parseInt(selectedContractId),
+                periodId: activePeriod.id,
+                ...data
+            });
+            alert('Inyección aplicada correctamente');
+            setSelectedContractId(''); // Reset selection only on add
         }
+        loadData();
     };
 
     const handleEditClick = (injection) => {
@@ -241,12 +216,7 @@ export function BudgetInjections({ mode = 'management' }) {
                                         filteredContracts.map(c => (
                                             <button
                                                 key={c.id}
-                                                onClick={() => {
-                                                    // Debug log
-                                                    console.log('Opening modal for contract:', c.id);
-                                                    setSelectedContractId(String(c.id));
-                                                    setIsAddModalOpen(true);
-                                                }}
+                                                onClick={() => setSelectedContractId(String(c.id))}
                                                 className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex flex-col gap-1 border
                                                 ${String(selectedContractId) === String(c.id)
                                                         ? 'bg-primary/5 border-primary/50 shadow-sm relative overflow-hidden'
@@ -395,6 +365,16 @@ export function BudgetInjections({ mode = 'management' }) {
                         {mode === 'management' && (
                             selectedContractId ? (
                                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                                    {/* INJECTION FORM */}
+                                    <BudgetInjectionForm
+                                        key={selectedContractId + (editingInjection ? '_edit' : '')}
+                                        contractCode={contracts.find(c => String(c.id) === String(selectedContractId))?.codigo}
+                                        initialCurrency={contracts.find(c => String(c.id) === String(selectedContractId))?.currency || 'CRC'}
+                                        initialData={editingInjection}
+                                        onSubmit={handleAddInjection}
+                                        onCancel={editingInjection ? handleCloseEdit : () => setSelectedContractId('')}
+                                    />
+
                                     {/* CONTRACT SPECIFIC HISTORY */}
                                     <div>
                                         <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -501,18 +481,6 @@ export function BudgetInjections({ mode = 'management' }) {
                         />
                     </div>
                 </div>
-            )}
-
-            {/* NEW INJECTION MODAL - User Request */}
-            {isAddModalOpen && selectedContractId && (
-                <BudgetInjectionModal
-                    contractCode={contracts.find(c => String(c.id) === String(selectedContractId))?.codigo}
-                    onClose={() => setIsAddModalOpen(false)}
-                    onSubmit={async (data) => {
-                        await handleAddInjection(data);
-                        setIsAddModalOpen(false);
-                    }}
-                />
             )}
         </>
     );
