@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { ContractService } from '../services/ContractService';
 import { Plus, FileText, Search, TrendingUp, ArrowRight, ExternalLink, Pencil, X } from 'lucide-react';
 import { BudgetInjectionForm } from '../components/BudgetInjectionForm';
+import { BudgetInjectionModal } from '../components/BudgetInjectionModal';
 
 export function BudgetInjections({ mode = 'management' }) {
     const [injections, setInjections] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [selectedContractId, setSelectedContractId] = useState('');
 
-    // Edit State
+    // Modal States
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingInjection, setEditingInjection] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
@@ -239,7 +241,10 @@ export function BudgetInjections({ mode = 'management' }) {
                                         filteredContracts.map(c => (
                                             <button
                                                 key={c.id}
-                                                onClick={() => setSelectedContractId(String(c.id))}
+                                                onClick={() => {
+                                                    setSelectedContractId(String(c.id));
+                                                    setIsAddModalOpen(true);
+                                                }}
                                                 className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all flex flex-col gap-1 border
                                                 ${String(selectedContractId) === String(c.id)
                                                         ? 'bg-primary/5 border-primary/50 shadow-sm relative overflow-hidden'
@@ -388,16 +393,6 @@ export function BudgetInjections({ mode = 'management' }) {
                         {mode === 'management' && (
                             selectedContractId ? (
                                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                                    {/* INJECTION FORM */}
-                                    <BudgetInjectionForm
-                                        key={selectedContractId + (editingInjection ? '_edit' : '')}
-                                        contractCode={contracts.find(c => String(c.id) === String(selectedContractId))?.codigo}
-                                        initialCurrency={contracts.find(c => String(c.id) === String(selectedContractId))?.currency || 'CRC'}
-                                        initialData={editingInjection}
-                                        onSubmit={handleAddInjection}
-                                        onCancel={editingInjection ? handleCloseEdit : () => setSelectedContractId('')}
-                                    />
-
                                     {/* CONTRACT SPECIFIC HISTORY */}
                                     <div>
                                         <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
@@ -504,6 +499,18 @@ export function BudgetInjections({ mode = 'management' }) {
                         />
                     </div>
                 </div>
+            )}
+
+            {/* NEW INJECTION MODAL - User Request */}
+            {isAddModalOpen && selectedContractId && (
+                <BudgetInjectionModal
+                    contractCode={contracts.find(c => String(c.id) === String(selectedContractId))?.codigo}
+                    onClose={() => setIsAddModalOpen(false)}
+                    onSubmit={async (data) => {
+                        await handleAddInjection(data);
+                        setIsAddModalOpen(false);
+                    }}
+                />
             )}
         </>
     );
