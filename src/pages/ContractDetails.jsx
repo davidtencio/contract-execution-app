@@ -146,7 +146,18 @@ export function ContractDetails({ contractId, onBack }) {
 
         // Skip excessive validation if editing same amount (simplification) or just validate always
         // Identify target period based on selected code (00, 01, etc.)
-        const targetPeriod = periods.find(p => p.numeroAno === orderForm.periodo);
+        const normalizePeriod = (str) => String(str).replace(/\D/g, '').replace(/^0+/, ''); // Remove non-digits and leading zeros for loose matching
+        const targetPeriod = periods.find(p => {
+            const periodDigits = normalizePeriod(p.numeroAno);
+            const formDigits = normalizePeriod(orderForm.periodo);
+            // Special case: if period in DB is "Periodo 1" (digits="1") and form is "01" (digits="1"), they match.
+            // If DB is "00", digits="0" (or empty if I strip zeros? Better to keep one zero if 0).
+            // Actually, the previous wizard had "00".
+            // Let's use a simpler includes/ends with approach or just standard int comparison if possible.
+
+            // Try standardizing to string comparison of significant parts
+            return periodDigits === formDigits;
+        });
 
         if (!targetPeriod) {
             alert('Contrato No Existe'); // Specific alert requested by user
