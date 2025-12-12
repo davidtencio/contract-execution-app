@@ -33,7 +33,7 @@ export function BudgetInjectionModal({ onClose, onSubmit, contractCode }) {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50">
             <div className="bg-card w-full max-w-md rounded-xl border border-border shadow-2xl p-6 relative">
                 <button
                     onClick={onClose}

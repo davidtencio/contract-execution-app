@@ -242,6 +242,8 @@ export function BudgetInjections({ mode = 'management' }) {
                                             <button
                                                 key={c.id}
                                                 onClick={() => {
+                                                    // Debug log
+                                                    console.log('Opening modal for contract:', c.id);
                                                     setSelectedContractId(String(c.id));
                                                     setIsAddModalOpen(true);
                                                 }}
